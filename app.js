@@ -13,7 +13,7 @@ app.use(express.json());
 app.use(cors());
 
 mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true }, () => {
-    console.log('successfully connected to database');
+    console.log('conectadisimo con la base de padre, datos');
 });
 const userRouter = require('./routes/User');
 const routerUpload = require('./routes/Photos');
@@ -23,5 +23,5 @@ app.use('/api/upload',routerUpload);
 app.use('/api/qr',routerQR);
 
 app.listen(5000, () => {
-    console.log('express server started');
+    console.log('arriba el backend padre');
 }); 
