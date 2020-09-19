@@ -71,8 +71,6 @@ userRouter.get('/hola', async (req, res) => {
 userRouter.get('/mod', async (req, res) => {
     const users = await UserNew.find()
     return res.json(users)
-
-
 })
 userRouter.get('/pfp/:companyid/:dni', async (req, res) => {
     var companyid = req.params.companyid;
