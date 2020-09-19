@@ -7,6 +7,7 @@ const path = require('path');
 const dnname = 'testa'
 const uri = "mongodb+srv://tievo:hU4s1oAElAanEEHu@lurien.1yjjv.mongodb.net/tievo?retryWrites=true&w=majority";
 //aa
+// const uri = 'mongodb://localhost:27017/lurien'
 app.use(express.static(path.join(__dirname, 'client/build')))
 app.use(cookieParser());
 app.use(express.json());
