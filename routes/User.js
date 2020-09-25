@@ -71,24 +71,25 @@ userRouter.get('/hola', async (req, res) => {
 userRouter.get('/mod', async (req, res) => {
     const users = await UserNew.find()
     return res.json(users)
-
-
 })
 userRouter.get('/pfp/:companyid/:dni', async (req, res) => {
     var companyid = req.params.companyid;
     var dni = req.params.dni;
 
-    try {
-        fs.access(`.\\users\\${companyid}\\${dni}\\${dni}.png`, fs.F_OK, (err) => {
+        if(fs.existsSync(`.\\users\\${companyid}\\${dni}\\${dni}.png`))
             return res.sendFile(`\\users\\${companyid}\\${dni}\\${dni}.png`, { root: '.' })
-        })
-    }
-    catch {
-        fs.access(`.\\users\\${companyid}\\${dni}.jpg`, fs.F_OK, (err) => {
-            return res.sendFile(`\\users\\${companyid}\\${dni}.jpg`, { root: '.' })
-        })
-    }
+    
+            return res.sendFile(`.\\users\\error.png`, { root: '.' })
 
+})
+userRouter.get('/qr/:companyid/:dni', async (req, res) => {
+    var companyid = req.params.companyid;
+    var dni = req.params.dni;
+
+        if(fs.existsSync(`.\\qrcodes\\${companyid}\\${dni}\\${dni}.png`))
+            return res.sendFile(`\\qrcodes\\${companyid}\\${dni}\\${dni}.png`, { root: '.' })
+    
+            return res.sendFile(`.\\qrcodes\\no-qr.png`, { root: '.' })
 
 })
 
