@@ -77,7 +77,7 @@ class AWSManager {
       var check = false;
       if (err) {
         console.log(err)
-        //return res.json({ messageError: true, data: { message: 'Error buscnaod las colecciones. Mal input/Credenciales.' } });
+        //return console.log({ messageError: true, data: { message: 'Error buscnaod las colecciones. Mal input/Credenciales.' } });
       }
       else {
         for (const key in data['CollectionIds']) {
@@ -92,14 +92,14 @@ class AWSManager {
           rekognition.createCollection(create_params, function (err, data) {
             if (err) {
               console.log(err)
-              //return res.json({ messageError: true, data: { message: 'Error creando la colección. Credenciales/colección ya existente.' } });
+              //return console.log({ messageError: true, data: { message: 'Error creando la colección. Credenciales/colección ya existente.' } });
             }
             else {
               face_list.forEach(face => {
                 var params = {
                   CollectionId: create_params.CollectionId,
                   Image: {
-                    Bytes: Buffer.from(face)
+                    Bytes: face
                   },
                   ExternalImageId: dni,
                   MaxFaces: 1
@@ -107,7 +107,7 @@ class AWSManager {
                 rekognition.indexFaces(params, async (err, data) => {
                   if (err) {
                     console.log(err)
-                    //return res.json({ messageError: true, data: { message: 'Error subiendo fotos, probablemente no se reconoce la cara.' } });
+                    //return console.log({ messageError: true, data: { message: 'Error subiendo fotos, probablemente no se reconoce la cara.' } });
                   }
                   else {
                     data['FaceRecords'].forEach(element => {
@@ -118,7 +118,7 @@ class AWSManager {
                     await UserNew.findOne({ dni: dni }, function (err, doc) {
                       if (err) {
                         console.log(err)
-                        //return res.json({ messageError: true, data: { message: 'Ni idea, pincho algo (Linea 111, aws.js)' } })
+                        //return console.log({ messageError: true, data: { message: 'Ni idea, pincho algo (Linea 111, aws.js)' } })
                       }
                       else {
                         var actualArray = doc.faceIds
@@ -136,7 +136,7 @@ class AWSManager {
                     
                   }
                 });
-                //return res.json({ messageError: false, data: { message: 'Fotos subidas, colección creada.' } })
+                //return console.log({ messageError: false, data: { message: 'Fotos subidas, colección creada.' } })
               });
             }
           });
@@ -145,13 +145,13 @@ class AWSManager {
             var params = {
               CollectionId: create_params.CollectionId,
               Image: {
-                Bytes: Buffer.from(face)
+                Bytes: face
               },
               ExternalImageId: dni,
               MaxFaces: 1
             };
             rekognition.indexFaces(params, async (err, data) => {
-              if (err) return res.json({ messageError: true, data: { message: 'Error subiendo fotos, probablemente no se reconoce la cara.' } });
+              if (err) return console.log({ messageError: true, data: { message: 'Error subiendo fotos, probablemente no se reconoce la cara.' } });
               else {
                 data['FaceRecords'].forEach(element => {
                   console.log(element['Face'].FaceId)
@@ -159,7 +159,7 @@ class AWSManager {
                   faceIdArray.push(element['Face'].FaceId)
                 })
                 await UserNew.findOne({ dni: dni }, function (err, doc) {
-                  if (err) return res.json({ messageError: true, data: { message: 'Ni idea, pincho algo (Linea 111, aws.js)' } })
+                  if (err) return console.log({ messageError: true, data: { message: 'Ni idea, pincho algo (Linea 111, aws.js)' } })
                   else {
                     var actualArray = doc.faceIds
                     for (var key in faceIdArray) {
@@ -173,7 +173,7 @@ class AWSManager {
                     
                   }
                 })
-                return res.json({ messageError: false, data: { message: 'Fotos subidas, colección creada.' } })
+                return console.log({ messageError: false, data: { message: 'Fotos subidas, colección creada.' } })
               }
             });
           });
