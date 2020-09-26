@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 const dnname = 'testa'
-const uri = "mongodb+srv://tievo:hU4s1oAElAanEEHu@lurien.1yjjv.mongodb.net/tievo?retryWrites=true&w=majority";
+const uri = "mongodb+srv://tievo:sdBVjd8GQGsw6Jag@lurien.1yjjv.mongodb.net/lurien?retryWrites=true&w=majority";
 //aa
 // const uri = 'mongodb://localhost:27017/lurien'
 app.use(express.static(path.join(__dirname, 'client/build')))
@@ -13,7 +13,8 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(cors());
 
-mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true }, () => {
+mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true }, (err) => {
+    if (err) throw new Error(err)
     console.log('conectadisimo con la base de padre, datos');
 });
 const userRouter = require('./routes/User');

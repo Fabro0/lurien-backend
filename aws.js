@@ -69,15 +69,13 @@ class AWSManager {
   }
 
   listCollectionsAndAddFaces = (collection_params, create_params, face_list, dni, res) => {
-    var faceIdArray = []
-    function onlyUnique(value, index, self) {
-      return self.indexOf(value) === index;
-    }
+    
+    
     rekognition.listCollections(collection_params, function (err, data) {
       var check = false;
       if (err) {
         console.log(err)
-        //return console.log({ messageError: true, data: { message: 'Error buscnaod las colecciones. Mal input/Credenciales.' } });
+        return console.log({ messageError: true, data: { message: 'Error buscnaod las colecciones. Mal input/Credenciales.' } });
       }
       else {
         for (const key in data['CollectionIds']) {
@@ -92,95 +90,18 @@ class AWSManager {
           rekognition.createCollection(create_params, function (err, data) {
             if (err) {
               console.log(err)
-              //return console.log({ messageError: true, data: { message: 'Error creando la colección. Credenciales/colección ya existente.' } });
+              return console.log({ messageError: true, data: { message: 'Error creando la colección. Credenciales/colección ya existente.' } });
             }
             else {
-              face_list.forEach(face => {
-                var params = {
-                  CollectionId: create_params.CollectionId,
-                  Image: {
-                    Bytes: face
-                  },
-                  ExternalImageId: dni,
-                  MaxFaces: 1
-                };
-                rekognition.indexFaces(params, async (err, data) => {
-                  if (err) {
-                    console.log(err)
-                    //return console.log({ messageError: true, data: { message: 'Error subiendo fotos, probablemente no se reconoce la cara.' } });
-                  }
-                  else {
-                    data['FaceRecords'].forEach(element => {
-                      console.log(element['Face'].FaceId)
-                      faceIdArray.push(element['Face'].FaceId)
-
-                    })
-                    await UserNew.findOne({ dni: dni }, function (err, doc) {
-                      if (err) {
-                        console.log(err)
-                        //return console.log({ messageError: true, data: { message: 'Ni idea, pincho algo (Linea 111, aws.js)' } })
-                      }
-                      else {
-                        var actualArray = doc.faceIds
-                        for (var key in faceIdArray) {
-                          actualArray.push(faceIdArray[key])
-                        }
-                        var finalArray = actualArray.filter(onlyUnique);
-                        doc.faceIds = finalArray
-                        doc.cantidadFotos = finalArray.length
-                        doc.modeloEntrenado = true;
-                        doc.save()
-                        
-                      }
-                    })
-                    
-                  }
-                });
-                //return console.log({ messageError: false, data: { message: 'Fotos subidas, colección creada.' } })
-              });
+              test(create_params, face_list, dni)
             }
-          });
+          })
         } else {
-          face_list.forEach(face => {
-            var params = {
-              CollectionId: create_params.CollectionId,
-              Image: {
-                Bytes: face
-              },
-              ExternalImageId: dni,
-              MaxFaces: 1
-            };
-            rekognition.indexFaces(params, async (err, data) => {
-              if (err) return console.log({ messageError: true, data: { message: 'Error subiendo fotos, probablemente no se reconoce la cara.' } });
-              else {
-                data['FaceRecords'].forEach(element => {
-                  console.log(element['Face'].FaceId)
-
-                  faceIdArray.push(element['Face'].FaceId)
-                })
-                await UserNew.findOne({ dni: dni }, function (err, doc) {
-                  if (err) return console.log({ messageError: true, data: { message: 'Ni idea, pincho algo (Linea 111, aws.js)' } })
-                  else {
-                    var actualArray = doc.faceIds
-                    for (var key in faceIdArray) {
-                      actualArray.push(faceIdArray[key])
-                    }
-                    var finalArray = actualArray.filter(onlyUnique);
-                    doc.faceIds = finalArray
-                    doc.cantidadFotos = actualArray.length
-                    doc.modeloEntrenado = true;
-                    doc.save()
-                    
-                  }
-                })
-                return console.log({ messageError: false, data: { message: 'Fotos subidas, colección creada.' } })
-              }
-            });
-          });
+          test(create_params, face_list, dni)
         }
       }
     });
-
+    return res.json('donete')
   }
 
   listFaces = (faces_params) => {
@@ -198,5 +119,60 @@ class AWSManager {
   }
 
 }
+
+function test(create_params, face_list, dni) {
+  var faceIdArray = []
+  function onlyUnique(value, index, self) {
+    return self.indexOf(value) === index;
+  }
+  face_list.forEach(face => {
+    var params = {
+      CollectionId: create_params.CollectionId,
+      Image: {
+        Bytes: face
+      },
+      ExternalImageId: dni,
+      MaxFaces: 1
+    };
+    rekognition.indexFaces(params, async (err, data) => {
+      if (err) {
+        console.log(err)
+        return console.log({ messageError: true, data: { message: 'Error subiendo fotos, probablemente no se reconoce la cara.' } });
+      }
+      else {
+        data['FaceRecords'].forEach(element => {
+          console.log(element['Face'].FaceId)
+          faceIdArray.push(element['Face'].FaceId)
+
+        })
+        if (face_list.length == faceIdArray.length) {
+          await UserNew.findOne({ dni: dni }, function (err, doc) {
+            if (err) {
+              console.log(err)
+              return console.log({ messageError: true, data: { message: 'Ni idea, pincho algo (Linea 111, aws.js)' } })
+            }
+            else {
+              var actualArray = doc.faceIds
+              for (var key in faceIdArray) {
+                actualArray.push(faceIdArray[key])
+              }
+              var finalArray = actualArray.filter(onlyUnique);
+              doc.faceIds = finalArray
+              doc.cantidadFotos = finalArray.length
+              doc.modeloEntrenado = true;
+              doc.save()
+
+            }
+          })
+        }
+
+
+      }
+    });
+    return console.log({ messageError: false, data: { message: 'Fotos subidas, colección creada.' } })
+  });
+}
+
+
 const manager = new AWSManager()
 module.exports = manager
