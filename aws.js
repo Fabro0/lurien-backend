@@ -13,7 +13,7 @@ class AWSManager {
     s3.createBucket({ Bucket: BUCKET_NAME }, function (err, data) {
       if (err) console.log(err, err.stack)
       else {
-        console.log('done', data.location)
+        console.log('donae', data.location)
       }
     })
   }

@@ -15,11 +15,11 @@ NO SE USA MAS PORQUE CAMBIAMOS A PUSHER-JS
 // const phite = new MyEmitter();
 
 /*
-LA SEGUNDA ES PARA FABRO / LOCALHOST 
+LA SEGUNDA ES PARA FABRO / LOCALHOST a
 */
 
-// const uri = "mongodb+srv://tievo:sdBVjd8GQGsw6Jag@lurien.1yjjv.mongodb.net/lurien?retryWrites=true&w=majority";
-const uri = 'mongodb://localhost:27017/lurien'
+ const uri = "mongodb+srv://tievo:sdBVjd8GQGsw6Jag@lurien.1yjjv.mongodb.net/lurien?retryWrites=true&w=majority";
+//const uri = 'mongodb://localhost:27017/lurien'
 
 app.use(express.static(path.join(__dirname, 'client/build')))
 app.use(cookieParser());
