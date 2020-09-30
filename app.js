@@ -5,8 +5,37 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 
+// const UserNew = require('./model/model');
+
+const EventEmitter = require('events');
+const Pusher = require("pusher")
+class MyEmitter extends EventEmitter { }
+const phite = new MyEmitter();
+
+
+var pusher = new Pusher({
+    appId: '1082208',
+    key: 'b103ad2b1e20a1198455',
+    secret: '5ddd5781b85de3eed2d7',
+    cluster: 'us2',
+    encrypted: true
+  });
+  
+  app.use("/debug/:companyid", async (req, res) => {
+    const { companyid } = req.params
+    // phite.emit('update');
+    let nombres = ["brenda","tievo","benatize","gati","fabro"]
+    let name = nombres[Math.floor(Math.random() * nombres.length)];
+    let hour = Date.now()
+    pusher.trigger(companyid, 'my-event', {
+      'name':  name,
+      'hora': hour
+    });
+    res.json({  companyid ,name,hour})
+  
+  })
+
 const uri = "mongodb+srv://tievo:sdBVjd8GQGsw6Jag@lurien.1yjjv.mongodb.net/lurien?retryWrites=true&w=majority";
-//aa
 // const uri = 'mongodb://localhost:27017/lurien'
 app.use(express.static(path.join(__dirname, 'client/build')))
 app.use(cookieParser());
