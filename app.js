@@ -4,7 +4,7 @@ const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
-const dnname = 'testa'
+
 const uri = "mongodb+srv://tievo:sdBVjd8GQGsw6Jag@lurien.1yjjv.mongodb.net/lurien?retryWrites=true&w=majority";
 //aa
 // const uri = 'mongodb://localhost:27017/lurien'
@@ -14,7 +14,7 @@ app.use(express.json());
 app.use(cors());
 
 mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true }, (err) => {
-    if (err) throw new Error(err)
+    // if (err) throw new Error(err)
     console.log('conectadisimo con la base de padre, datos');
 });
 const userRouter = require('./routes/User');
@@ -25,6 +25,6 @@ app.use('/api/upload',routerUpload);
 app.use('/api/qr',routerQR);
 
 
-app.listen(5000, () => {
+app.listen(8080, () => {
     console.log('arriba el backend padre');
 }); 

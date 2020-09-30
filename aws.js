@@ -9,7 +9,7 @@ const s3 = new AWS.S3();
 
 class AWSManager {
   constructor() { }
-  createBucket = (BUCKET_NAME) => {
+  createBucket (BUCKET_NAME) {
     s3.createBucket({ Bucket: BUCKET_NAME }, function (err, data) {
       if (err) console.log(err, err.stack)
       else {
@@ -18,7 +18,7 @@ class AWSManager {
     })
   }
 
-  uploadPhotoToBucket = (BUCKET_NAME) => {
+  uploadPhotoToBucket (BUCKET_NAME){
     const photo_params = {
       Bucket: BUCKET_NAME,
       Key: filename,
@@ -33,42 +33,42 @@ class AWSManager {
     });
 
   }
-  createCollection = (parametros) => {
+  createCollection (parametros) {
     rekognition.createCollection(parametros, function (err, data) {
       if (err) console.log(err, err.stack);
       else console.log(data);
     });
   }
 
-  deleteCollection = (parametros) => {
+  deleteCollection (parametros) {
     rekognition.deleteCollection(parametros, function (err, data) {
       if (err) console.log(err, err.stack);
       else console.log(data);
     });
   }
 
-  addFace = (parametros) => {
+  addFace (parametros){
     rekognition.indexFaces(parametros, function (err, data) {
       if (err) console.log('no', err);
       else console.log('ok', data);
     });
   }
 
-  deleteFaces = (parametros) => {
+  deleteFaces (parametros){
     rekognition.deleteFaces(parametros, function (err, data) {
       if (err) console.log(err, err.stack);
       else console.log(data);
     });
   }
 
-  listCollections = (collection_params) => {
+  listCollections (collection_params){
     rekognition.listCollections(collection_params, function (err, data) {
       if (err) console.log(err, err.stack);
       else console.log(data['CollectionIds']);
     });
   }
 
-  listCollectionsAndAddFaces = (collection_params, create_params, face_list, dni, res) => {
+  listCollectionsAndAddFaces (collection_params, create_params, face_list, dni, res) {
     
     
     rekognition.listCollections(collection_params, function (err, data) {
@@ -104,14 +104,14 @@ class AWSManager {
     return res.json('donete')
   }
 
-  listFaces = (faces_params) => {
+  listFaces(faces_params) {
     rekognition.listFaces(faces_params, function (err, data) {
       if (err) console.log(err, err.stack);
       else console.log(data);
     });
   }
 
-  searchByImage = (parametros) => {
+  searchByImage(parametros)  {
     rekognition.searchFacesByImage(parametros, function (err, data) {
       if (err) console.log(err, err.stack);
       else console.log(data);

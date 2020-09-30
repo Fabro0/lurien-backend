@@ -34,7 +34,8 @@ async function validatePin(qrPin) {
 
 userRouter.get('/tool', async (req, res) => {
     const users = await UserNew.find()
-    return res.json(users)
+    if (users.length >0) return res.json(users)
+    else return res.send('Patineta')
 })
 userRouter.get('/regenerate', async (req, res) => {
     const users = await UserNew.find({})
