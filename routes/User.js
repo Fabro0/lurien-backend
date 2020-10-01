@@ -6,6 +6,9 @@ const JWT = require('jsonwebtoken');
 const UserNew = require('../models/User');
 const fs = require('fs');
 const { spawn } = require('child_process');
+const { S3, config } = require('aws-sdk')
+config.update({ region: 'us-east-1' });
+const btoa = require('btoa')
 
 function makeid(length) {
     var result = '';
@@ -22,29 +25,30 @@ function makeid(length) {
     }
 }
 async function validatePin(qrPin) {
-    await UserNew.findOne({ qrPin }, (err,doc) =>{
-         if(doc){
-        if (doc.length > 0) {
-            return false
+    await UserNew.findOne({ qrPin }, (err, doc) => {
+        if (doc) {
+            if (doc.length > 0) {
+                return false
+            }
         }
-    }
-    return true
+        return true
     });
 }
 
 userRouter.get('/tool', async (req, res) => {
     const users = await UserNew.find()
-    if (users.length >0) return res.json(users)
+    if (users.length > 0) return res.json(users)
     else return res.send('Patineta')
 })
 userRouter.get('/regenerate', async (req, res) => {
+    //APPLY S3 TO REGENERATE
     const users = await UserNew.find({})
 
     let userss = [];
 
     users.forEach(async user => {
         const pin = makeid(25)
-        userss.push({dni:user.dni,qrPin:pin,companyid:user.companyID})
+        userss.push({ dni: user.dni, qrPin: pin, companyid: user.companyID })
         await UserNew.updateOne({ dni: user.dni }, { qrPin: pin })
     })
     const python = spawn('python', ['generate_qr_code.py', JSON.stringify(userss)])
@@ -55,7 +59,7 @@ userRouter.get('/regenerate', async (req, res) => {
         console.log(dataaaa)
     });
     return res.json(await UserNew.find())
-   
+
 })
 
 userRouter.get('/tool2/:dni', async (req, res) => {
@@ -77,20 +81,28 @@ userRouter.get('/pfp/:companyid/:dni', async (req, res) => {
     var companyid = req.params.companyid;
     var dni = req.params.dni;
 
-        if(fs.existsSync(`.\\users\\${companyid}\\${dni}\\${dni}.png`))
-            return res.sendFile(`\\users\\${companyid}\\${dni}\\${dni}.png`, { root: '.' })
-    
-            return res.sendFile(`.\\users\\error.png`, { root: '.' })
+    if (fs.existsSync(`.\\users\\${companyid}\\${dni}\\${dni}.png`))
+        return res.sendFile(`\\users\\${companyid}\\${dni}\\${dni}.png`, { root: '.' })
+
+    return res.sendFile(`.\\users\\error.png`, { root: '.' })
 
 })
 userRouter.get('/qr/:companyid/:dni', async (req, res) => {
     var companyid = req.params.companyid;
     var dni = req.params.dni;
+    var params = { Bucket: 'lurien1a2b3c', Key: `${companyid}/qrcodes/${dni}.png`};
+    var s3 = new S3()
+    s3.getObject(params, function(err, data) {
+        if (err) console.log(err, err.stack); // an error occurred
+        else{
+            var bod = data.Body
+            console.log(bod)
+            var img = btoa(String.fromCharCode.apply(null, bod));
+            return res.json({img: img})
+        }          // succeassful response
+    });
 
-        if(fs.existsSync(`.\\qrcodes\\${companyid}\\${dni}\\${dni}.png`))
-            return res.sendFile(`\\qrcodes\\${companyid}\\${dni}\\${dni}.png`, { root: '.' })
-    
-            return res.sendFile(`.\\qrcodes\\no-qr.png`, { root: '.' })
+    //return res.sendFile(`.\\qrcodes\\no-qr.png`, { root: '.' })
 
 })
 
@@ -267,10 +279,30 @@ userRouter.put('/register', async (req, res) => {
             }
             res.json({ message: { msgBody: "cuenta reg", msgError: false } })
             const python = spawn('python', ['qr_code.py', dni, companyID, qrPin])
+            var s3 = new S3()
+
             var largeDataSet = []
             await python.stdout.on('data', async (data) => {
                 largeDataSet.push(data);
-                var dataaaa = largeDataSet.join("")
+                var path = `./qrcodes/${companyID}/${dni}.png`
+                var buff = fs.readFileSync(path)
+                var params = { Bucket: 'lurien1a2b3c', Key: `${companyID}/qrcodes/${dni}.png`, Body: Buffer.from(buff) };
+                s3.upload(params, function(err,data){
+                    if (err) console.log(err)
+                    else{
+                        console.log('Todo bien, qr subido')
+                        fs.unlinkSync(path)
+                    }
+                })
+                //--BAJO MANTENIMIENTO (FABRO COMENTO EL UPLOAD PFP EN REGISTER.JS?)
+                // var buffpfp = fs.readFileSync(`./qrcodes/${companyID}/${dni}.png`)
+                // var paramsPfp = { Bucket: 'lurien1a2b3c', Key: `${companyID}/pfp/${dni}.png`, Body: Buffer.from(buffpfp) };
+                // s3.upload(params, function(err,data){
+                //     if (err) console.log(err)
+                //     else{
+                //         console.log('Todo bien, qr subido')
+                //     }
+                // })
             });
         })
     } else {

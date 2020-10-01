@@ -28,7 +28,7 @@ app.use(cors());
 
 mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true }, (err) => {
     if (err) console.log("[DATABSE] -",err)
-    console.log('[DATABASE] - conectado a mongo');
+    else console.log('[DATABASE] - conectado a mongo');
 });
 
 app.use('/api/user', require('./routes/User'));

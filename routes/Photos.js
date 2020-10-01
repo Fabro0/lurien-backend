@@ -99,78 +99,49 @@ userRouter.post('/upload/:companyid/:dni', async function (req, res) {
                 })
             }
         })
-
-
-        // fs.readdir(direccion2, (err, files) => {
-        //     var face_list = []
-        //     files.forEach(file => {
-        //         var cntn = fs.readFileSync(direccion2 + '/' + file)
-        //         face_list.push(cntn)
-        //         fs.unlinkSync(direccion2 + '/' + file)
-        //     })
-        //     AWSManager.listCollectionsAndAddFaces({}, { CollectionId: req.body.companyID }, face_list, req.params.dni, res)
-
-        // })
     })
 });
 userRouter.post('/uploadPfp', async function (req, res) {
 
-    var storage = multer.diskStorage({
-        destination: function (req, file, cb) {
-            const direccion1 = 'users/' + req.body.companyID;
-            const direccion2 = 'users/' + req.body.companyID + '/' + req.body.username;
-            var cr = false;
-            var cro = false;
-            if (!fs.existsSync(direccion1)) {
-                fs.mkdir(direccion1, err => {
-                    if (err) {
-                        console.log(err)
-                    }
-                })
-                cr = true;
-            }
-            else {
-                cr = true;
-            }
-            if (cr) {
-                if (!fs.existsSync(direccion2)) {
-                    fs.mkdir(direccion2, err => {
-                        if (err) {
-                            console.log(err)
-                        }
-                    })
-                    cro = true;
-                }
-                else {
-                    cro = true;
-                }
-                if (cro) {
-                    cb(null, direccion2)
-                }
-            }
+    var params = {
+
+    }
+    var bucket = `lurien1a2b3c` //pal debugeo
+    var s3 = new S3()
+    // const direccion1 = 'fotitos/' + req.params.companyid;
+    // const direccion2 = 'fotitos/' + req.params.companyid + '/' + req.params.dni;
+
+    var storage = multerS3({
+        s3: s3,
+        bucket: bucket,
+        metadata: function (req, file, cb) {
+          cb(null, {fieldName: file.fieldname});
         },
-        filename: function (req, file, cb) {
+        key: function (req, file, cb) {
             var extArr = file.originalname;
             let extensiones = ['.jpg', '.jpeg', '.png'];
             var extension = '';
             for (let i = 0; i < extensiones.length; i++) {
+
                 if (extArr.includes(extensiones[i])) {
                     extension = extensiones[i]
                 }
             }
-            cb(null, req.body.username + extension)
+            //var name = req.body.username + '-' + Date.now()  + extension
+            cb(null, `${req.body.companyID}/pfp/${req.body.username}.${extension}`)
+            //cb(null, `1a2b3c/pfp/45583265.png`)
         }
     })
+    
     var upload = multer({ storage: storage }).array('file')
     upload(req, res, function (err) {
         if (err instanceof multer.MulterError) {
             return res.status(500).json(err)
         } else if (err) {
             return res.status(500).json(err)
+        } else{
+            return res.status(200).json('picha al toke')
         }
-
-        return res.status(200).send(req.file)
-
     })
 });
 
