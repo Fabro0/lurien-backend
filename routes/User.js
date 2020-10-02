@@ -80,11 +80,20 @@ userRouter.get('/mod', async (req, res) => {
 userRouter.get('/pfp/:companyid/:dni', async (req, res) => {
     var companyid = req.params.companyid;
     var dni = req.params.dni;
-
-    if (fs.existsSync(`.\\users\\${companyid}\\${dni}\\${dni}.png`))
-        return res.sendFile(`\\users\\${companyid}\\${dni}\\${dni}.png`, { root: '.' })
-
-    return res.sendFile(`.\\users\\error.png`, { root: '.' })
+    var params = { Bucket: 'lurien1a2b3c', Key: `${companyid}/pfp/${dni}.png`};
+    var s3 = new S3()
+    s3.getObject(params, function(err, data) {
+        if (err) console.log(err, err.stack); // an error occurred
+        else{
+            var bod = data.Body
+            //console.log(bod)
+            
+            var img = btoa(bod.reduce(function (data, byte) {
+                return data + String.fromCharCode(byte);
+            }, ''));
+            return res.json({img: img})
+        }          // succeassful response
+    });
 
 })
 userRouter.get('/qr/:companyid/:dni', async (req, res) => {
@@ -96,7 +105,7 @@ userRouter.get('/qr/:companyid/:dni', async (req, res) => {
         if (err) console.log(err, err.stack); // an error occurred
         else{
             var bod = data.Body
-            console.log(bod)
+            //console.log(bod)
             var img = btoa(String.fromCharCode.apply(null, bod));
             return res.json({img: img})
         }          // succeassful response

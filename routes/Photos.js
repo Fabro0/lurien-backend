@@ -69,7 +69,7 @@ userRouter.post('/upload/:companyid/:dni', async function (req, res) {
                 }
             }
             var name = req.body.username + '-' + Date.now()  + extension
-            console.log(req.body)
+            //console.log(req.body)aa
             cb(null, `${req.body.companyID}/model/${req.body.username}/${name}`)
         }
     })
@@ -127,19 +127,22 @@ userRouter.post('/uploadPfp', async function (req, res) {
                     extension = extensiones[i]
                 }
             }
+            console.log('definido el name')
             //var name = req.body.username + '-' + Date.now()  + extension
-            cb(null, `${req.body.companyID}/pfp/${req.body.username}.${extension}`)
+            cb(null, `${req.body.companyID}/pfp/${req.body.username}${extension}`)
             //cb(null, `1a2b3c/pfp/45583265.png`)
         }
     })
     
     var upload = multer({ storage: storage }).array('file')
     upload(req, res, function (err) {
+        console.log('entro al upload??')
         if (err instanceof multer.MulterError) {
             return res.status(500).json(err)
         } else if (err) {
             return res.status(500).json(err)
         } else{
+            console.log('flinch')
             return res.status(200).json('picha al toke')
         }
     })
