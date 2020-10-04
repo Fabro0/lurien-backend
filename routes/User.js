@@ -77,43 +77,43 @@ userRouter.get('/mod', async (req, res) => {
     const users = await UserNew.find()
     return res.json(users)
 })
-userRouter.get('/pfp/:companyid/:dni', async (req, res) => {
-    var companyid = req.params.companyid;
-    var dni = req.params.dni;
-    var params = { Bucket: 'lurien1a2b3c', Key: `${companyid}/pfp/${dni}.png`};
-    var s3 = new S3()
-    s3.getObject(params, function(err, data) {
-        if (err) console.log(err, err.stack); // an error occurred
-        else{
-            var bod = data.Body
-            //console.log(bod)
+// userRouter.get('/pfp/:companyid/:dni', async (req, res) => {
+//     var companyid = req.params.companyid;
+//     var dni = req.params.dni;
+//     var params = { Bucket: 'resources.lurien.team', Key: `${companyid}/pfp/${dni}.png`};
+//     var s3 = new S3()
+//     s3.getObject(params, function(err, data) {
+//         if (err) console.log(err, err.stack); // an error occurred
+//         else{
+//             var bod = data.Body
+//             //console.log(bod)
             
-            var img = btoa(bod.reduce(function (data, byte) {
-                return data + String.fromCharCode(byte);
-            }, ''));
-            return res.json({img: img})
-        }          // succeassful response
-    });
+//             var img = btoa(bod.reduce(function (data, byte) {
+//                 return data + String.fromCharCode(byte);
+//             }, ''));
+//             return res.json({img: img})
+//         }          // succeassful response
+//     });
 
-})
-userRouter.get('/qr/:companyid/:dni', async (req, res) => {
-    var companyid = req.params.companyid;
-    var dni = req.params.dni;
-    var params = { Bucket: 'lurien1a2b3c', Key: `${companyid}/qrcodes/${dni}.png`};
-    var s3 = new S3()
-    s3.getObject(params, function(err, data) {
-        if (err) console.log(err, err.stack); // an error occurred
-        else{
-            var bod = data.Body
-            //console.log(bod)
-            var img = btoa(String.fromCharCode.apply(null, bod));
-            return res.json({img: img})
-        }          // succeassful response
-    });
+// })
+// userRouter.get('/qr/:companyid/:dni', async (req, res) => {
+//     var companyid = req.params.companyid;
+//     var dni = req.params.dni;
+//     var params = { Bucket: 'resources.lurien.team', Key: `${companyid}/qrcodes/${dni}.png`};
+//     var s3 = new S3()
+//     s3.getObject(params, function(err, data) {
+//         if (err) console.log(err, err.stack); // an error occurred
+//         else{
+//             var bod = data.Body
+//             //console.log(bod)
+//             var img = btoa(String.fromCharCode.apply(null, bod));
+//             return res.json({img: img})
+//         }          // succeassful response
+//     });
 
-    //return res.sendFile(`.\\qrcodes\\no-qr.png`, { root: '.' })
+//     //return res.sendFile(`.\\qrcodes\\no-qr.png`, { root: '.' })
 
-})
+// })
 
 userRouter.post('/registerNew', (req, res) => {
     const { dni, companyID, role, username } = req.body;
@@ -295,7 +295,7 @@ userRouter.put('/register', async (req, res) => {
                 largeDataSet.push(data);
                 var path = `./qrcodes/${companyID}/${dni}.png`
                 var buff = fs.readFileSync(path)
-                var params = { Bucket: 'lurien1a2b3c', Key: `${companyID}/qrcodes/${dni}.png`, Body: Buffer.from(buff) };
+                var params = { Bucket: 'resources.lurien.team', Key: `${companyID}/qrcodes/${dni}.png`, Body: Buffer.from(buff) };
                 s3.upload(params, function(err,data){
                     if (err) console.log(err)
                     else{
@@ -305,7 +305,7 @@ userRouter.put('/register', async (req, res) => {
                 })
                 //--BAJO MANTENIMIENTO (FABRO COMENTO EL UPLOAD PFP EN REGISTER.JS?)
                 // var buffpfp = fs.readFileSync(`./qrcodes/${companyID}/${dni}.png`)
-                // var paramsPfp = { Bucket: 'lurien1a2b3c', Key: `${companyID}/pfp/${dni}.png`, Body: Buffer.from(buffpfp) };
+                // var paramsPfp = { Bucket: 'resources.lurien.team', Key: `${companyID}/pfp/${dni}.png`, Body: Buffer.from(buffpfp) };
                 // s3.upload(params, function(err,data){
                 //     if (err) console.log(err)
                 //     else{

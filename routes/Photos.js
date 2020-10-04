@@ -39,7 +39,7 @@ userRouter.post('/wipeFotos/:companyid/:dni', async (req, res) => {
         doc.save()
     })
     var alg = `${companyid}/model/${dni}/`
-    emptyS3Directory('lurien1a2b3c', `${companyid}/model/${dni}/`)
+    emptyS3Directory('resources.lurien.team', `${companyid}/model/${dni}/`)
     return res.json('zapatilla')
 
 })
@@ -47,13 +47,14 @@ userRouter.post('/upload/:companyid/:dni', async function (req, res) {
     var params = {
 
     }
-    var bucket = `lurien1a2b3c` //pal debugeo
+    var bucket = `resources.lurien.team` //pal debugeo
     var s3 = new S3()
     // const direccion1 = 'fotitos/' + req.params.companyid;
     // const direccion2 = 'fotitos/' + req.params.companyid + '/' + req.params.dni;
 
     var storage = multerS3({
         s3: s3,
+        acl:'public-read',
         bucket: bucket,
         metadata: function (req, file, cb) {
           cb(null, {fieldName: file.fieldname});
@@ -106,13 +107,14 @@ userRouter.post('/uploadPfp', async function (req, res) {
     var params = {
 
     }
-    var bucket = `lurien1a2b3c` //pal debugeo
+    var bucket = `resources.lurien.team` 
     var s3 = new S3()
     // const direccion1 = 'fotitos/' + req.params.companyid;
     // const direccion2 = 'fotitos/' + req.params.companyid + '/' + req.params.dni;
 
     var storage = multerS3({
         s3: s3,
+        acl:'public-read',
         bucket: bucket,
         metadata: function (req, file, cb) {
           cb(null, {fieldName: file.fieldname});
