@@ -3,6 +3,7 @@ const userRouter = express.Router();
 const passport = require('passport');
 const passportConfig = require('../passport');
 const JWT = require('jsonwebtoken');
+const mongoose = require('mongoose')
 const UserNew = require('../models/User');
 const fs = require('fs');
 const { spawn } = require('child_process');
@@ -322,13 +323,18 @@ userRouter.put('/register', async (req, res) => {
 userRouter.post('/login', passport.authenticate('local', { session: false }), async (req, res) => {
     if (req.isAuthenticated()) {
         const { _id, username, role, dni, companyID, mail, cantidadFotos, pfp  } = req.user;
-        //console.log(req.user)
+        console.log("[LOGIN]",req.user.pfp)
         var extras ={
             dni: `${dni}.jpg` 
         }
         const token = signToken(_id);
         var fbtkn = await adm.auth().createCustomToken(String(dni),extras)
+
+        let usuario = await mongoose.connection.useDb("lurien").collection("usernews").findOne({dni})
+        const {qrPin} = usuario;
+
         res.cookie('access_token', token, { httpOnly: true, sameSite: true });
+        
         res.status(200).json({ isAuthenticated: true, user: { username, role, dni, companyID, mail, cantidadFotos, pfp},fbToken:fbtkn });
     }
 });
@@ -337,10 +343,14 @@ userRouter.get('/logout', passport.authenticate('jwt', { session: false }), (req
     res.json({ user: { username: "", role: "", dni: "", companyID: "", mail: "", cantidadFotos: 0 , pfp:""}, success: true });
 });
 
-userRouter.get('/authenticated', passport.authenticate('jwt', { session: false }), (req, res) => {
-    const { username, role, dni, companyID, mail, cantidadFotos, pfp } = req.user;
+userRouter.get('/authenticated', passport.authenticate('jwt', { session: false }), async (req, res) => {
+    const { username, role, dni, companyID, mail, cantidadFotos} = req.user;
     //console.log(req.user)
-    res.status(200).json({ isAuthenticated: true, user: { username, role, dni, modeloEntrenado: false, companyID, mail, cantidadFotos, pfp }});
+
+    let usuario = await mongoose.connection.useDb("lurien").collection("usernews").findOne({dni})
+    let pfp = usuario.pfp
+
+    res.status(200).json({ isAuthenticated: true, user: { username, role, dni, modeloEntrenado: false, companyID, mail, cantidadFotos}});
 });
 
 
