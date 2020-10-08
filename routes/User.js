@@ -8,7 +8,8 @@ const fs = require('fs');
 const { spawn } = require('child_process');
 const { S3, config } = require('aws-sdk')
 config.update({ region: 'us-east-1' });
-const btoa = require('btoa')
+const btoa = require('btoa');
+var adm = require('firebase-admin')
 
 function makeid(length) {
     var result = '';
@@ -318,23 +319,28 @@ userRouter.put('/register', async (req, res) => {
         res.json({ message: { msgBody: "hubo un error", msgError: true } });
     }
 });
-userRouter.post('/login', passport.authenticate('local', { session: false }), (req, res) => {
+userRouter.post('/login', passport.authenticate('local', { session: false }), async (req, res) => {
     if (req.isAuthenticated()) {
-        const { _id, username, role, dni, companyID, mail, cantidadFotos } = req.user;
+        const { _id, username, role, dni, companyID, mail, cantidadFotos, pfp  } = req.user;
+        //console.log(req.user)
+        var extras ={
+            dni: `${dni}.jpg` 
+        }
         const token = signToken(_id);
-
+        var fbtkn = await adm.auth().createCustomToken(String(dni),extras)
         res.cookie('access_token', token, { httpOnly: true, sameSite: true });
-        res.status(200).json({ isAuthenticated: true, user: { username, role, dni, companyID, mail, cantidadFotos } });
+        res.status(200).json({ isAuthenticated: true, user: { username, role, dni, companyID, mail, cantidadFotos, pfp},fbToken:fbtkn });
     }
 });
 userRouter.get('/logout', passport.authenticate('jwt', { session: false }), (req, res) => {
     res.clearCookie('access_token');
-    res.json({ user: { username: "", role: "", dni: "", companyID: "", mail: "", cantidadFotos: 0 }, success: true });
+    res.json({ user: { username: "", role: "", dni: "", companyID: "", mail: "", cantidadFotos: 0 , pfp:""}, success: true });
 });
 
 userRouter.get('/authenticated', passport.authenticate('jwt', { session: false }), (req, res) => {
-    const { username, role, dni, companyID, mail, cantidadFotos } = req.user;
-    res.status(200).json({ isAuthenticated: true, user: { username, role, dni, modeloEntrenado: false, companyID, mail, cantidadFotos } });
+    const { username, role, dni, companyID, mail, cantidadFotos, pfp } = req.user;
+    //console.log(req.user)
+    res.status(200).json({ isAuthenticated: true, user: { username, role, dni, modeloEntrenado: false, companyID, mail, cantidadFotos, pfp }});
 });
 
 

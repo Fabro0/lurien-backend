@@ -4,21 +4,21 @@ const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
+global.XMLHttpRequest = require("xhr2");
+var firebase = require("firebase/app");
+require("firebase/auth");
+require("firebase/storage");
 
-/*
-NO SE USA MAS PORQUE CAMBIAMOS A PUSHER-JS
-*/
+var serviceAccount = require("./firebase.json");
+var adm = require('firebase-admin')
+adm.initializeApp({
+    credential: adm.credential.cert(serviceAccount),
+    databaseURL: 'https://test-lurien.firebaseio.com'
+});
 
-// const EventEmitter = require('events');
-// const Pusher = require("pusher")
-// class MyEmitter extends EventEmitter { }
-// const phite = new MyEmitter();
 
-/*
-LA SEGUNDA ES PARA FABRO / LOCALHOST a
-*/
 
- const uri = "mongodb+srv://tievo:sdBVjd8GQGsw6Jag@lurien.1yjjv.mongodb.net/lurien?retryWrites=true&w=majority";
+const uri = "mongodb+srv://tievo:sdBVjd8GQGsw6Jag@lurien.1yjjv.mongodb.net/lurien?retryWrites=true&w=majority";
 //const uri = 'mongodb://localhost:27017/lurien'
 
 app.use(express.static(path.join(__dirname, 'client/build')))
@@ -26,9 +26,10 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(cors());
 
-mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true }, (err) => {
+mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true }, async (err) => {
     if (err) console.log("[DATABSE] -",err)
     else console.log('[DATABASE] - conectado a mongo');
+    
 });
 
 app.use('/api/user', require('./routes/User'));
