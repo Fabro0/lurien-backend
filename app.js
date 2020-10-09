@@ -17,6 +17,8 @@ adm.initializeApp({
     databaseURL: 'https://test-lurien.firebaseio.com'
 });
 
+firebase.initializeApp(JSON.parse(process.env.firebase))
+
 
 
 const uri = process.env.MONGO_URI;

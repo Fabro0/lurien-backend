@@ -11,6 +11,9 @@ const { S3, config } = require('aws-sdk')
 config.update({ region: 'us-east-1' });
 const btoa = require('btoa');
 var adm = require('firebase-admin')
+var firebase = require("firebase/app");
+require("firebase/auth");
+require("firebase/storage");
 
 function makeid(length) {
     var result = '';
@@ -72,51 +75,41 @@ userRouter.get('/tool2/:dni', async (req, res) => {
     return res.json({ messi: 'messi' })
 })
 
-userRouter.get('/hola', async (req, res) => {
-    return res.send('hola mundooo')
+userRouter.get('/hola/:companyid/:dni', async (req, res) => {
+    var companyID = req.params.companyid
+    var dni = parseInt(req.params.dni)
+    var path = `./qrcodes/${companyID}/${dni}.png`
+    var a = Buffer.from(fs.readFileSync(path))
+    var token = await adm.auth().createCustomToken("amudejemedejamu", { hidden: process.env.hidden })
+    firebase.auth().signInWithCustomToken(token).then(() => {
+        var ref = firebase.storage().ref(`${companyID}/qrcodes/${dni}.jpg`)
+        ref.put(a).then(snap => {
+            console.log("checkpoint")
+            snap.ref.getDownloadURL().then(async url => {
+                console.log(dni)
+                var c = await mongoose.connection.useDb("lurien").collection("usernews").findOne({dni})
+                console.log(c)
+                // console.log(url)
+                // await mongoose.connection.useDb("lurien").collection("usernews").findOneAndUpdate(
+                //     { dni: dni },
+                //     { $set: { qrLink: url } },(err, result)=>{
+                //         if (err) return res.json("no")
+                //         else return res.json("si")
+                //     })
+            }).catch(err => {
+                console.log("[url]", err)
+            })
+        }).catch(err => {
+            console.log("[upload]", err)
+        })
+    }).catch(err => {
+        console.log("[signin]", err)
+    })
 })
 userRouter.get('/mod', async (req, res) => {
     const users = await UserNew.find()
     return res.json(users)
 })
-// userRouter.get('/pfp/:companyid/:dni', async (req, res) => {
-//     var companyid = req.params.companyid;
-//     var dni = req.params.dni;
-//     var params = { Bucket: 'resources.lurien.team', Key: `${companyid}/pfp/${dni}.png`};
-//     var s3 = new S3()
-//     s3.getObject(params, function(err, data) {
-//         if (err) console.log(err, err.stack); // an error occurred
-//         else{
-//             var bod = data.Body
-//             //console.log(bod)
-            
-//             var img = btoa(bod.reduce(function (data, byte) {
-//                 return data + String.fromCharCode(byte);
-//             }, ''));
-//             return res.json({img: img})
-//         }          // succeassful response
-//     });
-
-// })
-// userRouter.get('/qr/:companyid/:dni', async (req, res) => {
-//     var companyid = req.params.companyid;
-//     var dni = req.params.dni;
-//     var params = { Bucket: 'resources.lurien.team', Key: `${companyid}/qrcodes/${dni}.png`};
-//     var s3 = new S3()
-//     s3.getObject(params, function(err, data) {
-//         if (err) console.log(err, err.stack); // an error occurred
-//         else{
-//             var bod = data.Body
-//             //console.log(bod)
-//             var img = btoa(String.fromCharCode.apply(null, bod));
-//             return res.json({img: img})
-//         }          // succeassful response
-//     });
-
-//     //return res.sendFile(`.\\qrcodes\\no-qr.png`, { root: '.' })
-
-// })
-
 userRouter.post('/registerNew', (req, res) => {
     const { dni, companyID, role, username } = req.body;
     UserNew.findOne({ dni }, (err, user) => {
@@ -290,30 +283,25 @@ userRouter.put('/register', async (req, res) => {
             }
             res.json({ message: { msgBody: "cuenta reg", msgError: false } })
             const python = spawn('python', ['qr_code.py', dni, companyID, qrPin])
-            var s3 = new S3()
-
             var largeDataSet = []
             await python.stdout.on('data', async (data) => {
                 largeDataSet.push(data);
                 var path = `./qrcodes/${companyID}/${dni}.png`
-                var buff = fs.readFileSync(path)
-                var params = { Bucket: 'resources.lurien.team', Key: `${companyID}/qrcodes/${dni}.png`, Body: Buffer.from(buff) };
-                s3.upload(params, function(err,data){
-                    if (err) console.log(err)
-                    else{
-                        console.log('Todo bien, qr subido')
-                        fs.unlinkSync(path)
-                    }
+                var a = Buffer.from(fs.readFileSync(path))
+                var token = await adm.auth().createCustomToken("amudejemedejamu", { hidden: process.env.hidden })
+                firebase.auth().signInWithCustomToken(token).then(() => {
+                    var ref = firebase.storage().ref(`${companyID}/qrcodes/${dni}.jpg`)
+                    ref.put(a).then(snap => {
+                        console.log("checkpoint")
+                        snap.ref.getDownloadURL().then(url => {
+                            console.log(url)
+                            mongoose.connection.useDb("lurien").collection("usernews").findOneAndUpdate(
+                                { dni: parseInt(dni) },
+                                { $set: { qrLink: url } }
+                            )
+                        })
+                    })
                 })
-                //--BAJO MANTENIMIENTO (FABRO COMENTO EL UPLOAD PFP EN REGISTER.JS?)
-                // var buffpfp = fs.readFileSync(`./qrcodes/${companyID}/${dni}.png`)
-                // var paramsPfp = { Bucket: 'resources.lurien.team', Key: `${companyID}/pfp/${dni}.png`, Body: Buffer.from(buffpfp) };
-                // s3.upload(params, function(err,data){
-                //     if (err) console.log(err)
-                //     else{
-                //         console.log('Todo bien, qr subido')
-                //     }
-                // })
             });
         })
     } else {
@@ -322,25 +310,25 @@ userRouter.put('/register', async (req, res) => {
 });
 userRouter.post('/login', passport.authenticate('local', { session: false }), async (req, res) => {
     if (req.isAuthenticated()) {
-        const { _id, username, role, dni, companyID, mail, cantidadFotos, pfp  } = req.user;
-        console.log("[LOGIN]",req.user.pfp)
-        var extras ={
-            dni: `${dni}.jpg` 
+        const { _id, username, role, dni, companyID, mail, cantidadFotos, pfp, qrLink } = req.user;
+        console.log("[LOGIN]", req.user.pfp)
+        var extras = {
+            dni: `${dni}.jpg`
         }
         const token = signToken(_id);
-        var fbtkn = await adm.auth().createCustomToken(String(dni),extras)
+        var fbtkn = await adm.auth().createCustomToken(String(dni), extras)
         res.cookie('access_token', token, { httpOnly: true, sameSite: true });
-        res.status(200).json({ isAuthenticated: true, user: { username, role, dni, companyID, mail, cantidadFotos, pfp},fbToken:fbtkn });
+        res.status(200).json({ isAuthenticated: true, user: { username, role, dni, companyID, mail, cantidadFotos, pfp, qrLink }, fbToken: fbtkn });
     }
 });
 userRouter.get('/logout', passport.authenticate('jwt', { session: false }), (req, res) => {
     res.clearCookie('access_token');
-    res.json({ user: { username: "", role: "", dni: "", companyID: "", mail: "", cantidadFotos: 0 , pfp:""}, success: true });
+    res.json({ user: { username: "", role: "", dni: "", companyID: "", mail: "", cantidadFotos: 0, pfp: "" }, success: true });
 });
 
 userRouter.get('/authenticated', passport.authenticate('jwt', { session: false }), async (req, res) => {
-    const { username, role, dni, companyID, mail, cantidadFotos, pfp} = req.user;
-    res.status(200).json({ isAuthenticated: true, user: { username, role, dni, modeloEntrenado: false, companyID, mail, cantidadFotos, pfp}});
+    const { username, role, dni, companyID, mail, cantidadFotos, pfp, qrLink } = req.user;
+    res.status(200).json({ isAuthenticated: true, user: { username, role, dni, modeloEntrenado: false, companyID, mail, cantidadFotos, pfp, qrLink } });
 });
 
 

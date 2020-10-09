@@ -42,7 +42,12 @@ const UserSchema = new mongoose.Schema({
         minlength: 25
     },
     pfp:{
-        type:String
+        type:String,
+        default:""
+    },
+    qrLink:{
+        type:String,
+        default:""
     }
 });
 
