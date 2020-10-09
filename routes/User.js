@@ -29,6 +29,12 @@ function makeid(length) {
         return result;
     }
 }
+
+async function signIn(callback) {
+    var token = await adm.auth().createCustomToken("amudejemedejamu", { hidden: process.env.hidden })
+    firebase.auth().signInWithCustomToken(token).then(() => callback())
+}
+
 async function validatePin(qrPin) {
     await UserNew.findOne({ qrPin }, (err, doc) => {
         if (doc) {
@@ -80,30 +86,20 @@ userRouter.get('/hola/:companyid/:dni', async (req, res) => {
     var dni = parseInt(req.params.dni)
     var path = `./qrcodes/${companyID}/${dni}.png`
     var a = Buffer.from(fs.readFileSync(path))
-    var token = await adm.auth().createCustomToken("amudejemedejamu", { hidden: process.env.hidden })
-    firebase.auth().signInWithCustomToken(token).then(() => {
+    signIn(() => {
         var ref = firebase.storage().ref(`${companyID}/qrcodes/${dni}.jpg`)
         ref.put(a).then(snap => {
             console.log("checkpoint")
-            snap.ref.getDownloadURL().then(async url => {
-                console.log(dni)
-                var c = await mongoose.connection.useDb("lurien").collection("usernews").findOne({dni})
-                console.log(c)
-                // console.log(url)
-                // await mongoose.connection.useDb("lurien").collection("usernews").findOneAndUpdate(
-                //     { dni: dni },
-                //     { $set: { qrLink: url } },(err, result)=>{
-                //         if (err) return res.json("no")
-                //         else return res.json("si")
-                //     })
-            }).catch(err => {
-                console.log("[url]", err)
+            snap.ref.getDownloadURL().then(url => {
+                console.log(url)
+                mongoose.connection.useDb("lurien").collection("usernews").findOneAndUpdate(
+                    { dni: parseInt(dni) },
+                    { $set: { qrLink: url } }, (err,ress)=>{
+                        if (err) return res.json("noo")
+                        else return res.json("sii oo")
+                    })
             })
-        }).catch(err => {
-            console.log("[upload]", err)
         })
-    }).catch(err => {
-        console.log("[signin]", err)
     })
 })
 userRouter.get('/mod', async (req, res) => {
@@ -138,17 +134,17 @@ userRouter.get('/users/:compid', async (req, res) => {
 userRouter.get('/delete/:_id', async (req, res) => {
     const id = req.params._id;
     const user = await UserNew.findOne({ "_id": id })
-    const users = await UserNew.deleteOne({ "_id": id })
+    await UserNew.deleteOne({ "_id": id })
     var dni = user.dni;
     var company = user.companyID;
-    // const python = spawn('python', ['delete.py', dni, company])
-    // var largeDataSet = []
-    // await python.stdout.on('data', async (data) => {
-    //     largeDataSet.push(data);
-    //     var dataaaa = largeDataSet.join("")
-    // });
-    // return res.json(users)
+    signIn(()=>{
+        var ref = firebase.storage().ref(`${company}/`)
+        ref.child(`pfp/${dni}.jpg`).delete()
+        ref.child(`qrcodes/${dni}.jpg`).delete()
+    })
+
 })
+
 
 userRouter.get('/getFotos/:dni', async (req, res) => {
     const dni = req.params.dni;
@@ -288,8 +284,7 @@ userRouter.put('/register', async (req, res) => {
                 largeDataSet.push(data);
                 var path = `./qrcodes/${companyID}/${dni}.png`
                 var a = Buffer.from(fs.readFileSync(path))
-                var token = await adm.auth().createCustomToken("amudejemedejamu", { hidden: process.env.hidden })
-                firebase.auth().signInWithCustomToken(token).then(() => {
+                signIn(() => {
                     var ref = firebase.storage().ref(`${companyID}/qrcodes/${dni}.jpg`)
                     ref.put(a).then(snap => {
                         console.log("checkpoint")
@@ -310,15 +305,16 @@ userRouter.put('/register', async (req, res) => {
 });
 userRouter.post('/login', passport.authenticate('local', { session: false }), async (req, res) => {
     if (req.isAuthenticated()) {
-        const { _id, username, role, dni, companyID, mail, cantidadFotos, pfp, qrLink } = req.user;
+        const { _id, username, role, dni, companyID, mail, cantidadFotos, pfp, qrLink, modelLinks } = req.user;
         console.log("[LOGIN]", req.user.pfp)
         var extras = {
-            dni: `${dni}.jpg`
+            dni: `${dni}.jpg`,
+            dniB: String(dni)
         }
         const token = signToken(_id);
         var fbtkn = await adm.auth().createCustomToken(String(dni), extras)
         res.cookie('access_token', token, { httpOnly: true, sameSite: true });
-        res.status(200).json({ isAuthenticated: true, user: { username, role, dni, companyID, mail, cantidadFotos, pfp, qrLink }, fbToken: fbtkn });
+        res.status(200).json({ isAuthenticated: true, user: { username, role, dni, companyID, mail, cantidadFotos, pfp, qrLink, modelLinks }, fbToken: fbtkn });
     }
 });
 userRouter.get('/logout', passport.authenticate('jwt', { session: false }), (req, res) => {
@@ -327,8 +323,8 @@ userRouter.get('/logout', passport.authenticate('jwt', { session: false }), (req
 });
 
 userRouter.get('/authenticated', passport.authenticate('jwt', { session: false }), async (req, res) => {
-    const { username, role, dni, companyID, mail, cantidadFotos, pfp, qrLink } = req.user;
-    res.status(200).json({ isAuthenticated: true, user: { username, role, dni, modeloEntrenado: false, companyID, mail, cantidadFotos, pfp, qrLink } });
+    const { username, role, dni, companyID, mail, cantidadFotos, pfp, qrLink, modelLinks } = req.user;
+    res.status(200).json({ isAuthenticated: true, user: { username, role, dni, modeloEntrenado: false, companyID, mail, cantidadFotos, pfp, qrLink, modelLinks } });
 });
 
 

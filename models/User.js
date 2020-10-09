@@ -48,7 +48,8 @@ const UserSchema = new mongoose.Schema({
     qrLink:{
         type:String,
         default:""
-    }
+    },
+    modelLinks:[String]
 });
 
 UserSchema.pre('save', function (next) {
