@@ -329,12 +329,7 @@ userRouter.post('/login', passport.authenticate('local', { session: false }), as
         }
         const token = signToken(_id);
         var fbtkn = await adm.auth().createCustomToken(String(dni),extras)
-
-        let usuario = await mongoose.connection.useDb("lurien").collection("usernews").findOne({dni})
-        const {qrPin} = usuario;
-
         res.cookie('access_token', token, { httpOnly: true, sameSite: true });
-        
         res.status(200).json({ isAuthenticated: true, user: { username, role, dni, companyID, mail, cantidadFotos, pfp},fbToken:fbtkn });
     }
 });
@@ -344,13 +339,8 @@ userRouter.get('/logout', passport.authenticate('jwt', { session: false }), (req
 });
 
 userRouter.get('/authenticated', passport.authenticate('jwt', { session: false }), async (req, res) => {
-    const { username, role, dni, companyID, mail, cantidadFotos} = req.user;
-    //console.log(req.user)
-
-    let usuario = await mongoose.connection.useDb("lurien").collection("usernews").findOne({dni})
-    let pfp = usuario.pfp
-
-    res.status(200).json({ isAuthenticated: true, user: { username, role, dni, modeloEntrenado: false, companyID, mail, cantidadFotos}});
+    const { username, role, dni, companyID, mail, cantidadFotos, pfp} = req.user;
+    res.status(200).json({ isAuthenticated: true, user: { username, role, dni, modeloEntrenado: false, companyID, mail, cantidadFotos, pfp}});
 });
 
 

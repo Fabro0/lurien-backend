@@ -40,6 +40,9 @@ const UserSchema = new mongoose.Schema({
         type: String,
         maxlength: 30,
         minlength: 25
+    },
+    pfp:{
+        type:String
     }
 });
 

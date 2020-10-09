@@ -6,6 +6,7 @@ const cors = require('cors');
 const path = require('path');
 global.XMLHttpRequest = require("xhr2");
 var firebase = require("firebase/app");
+require('dotenv').config()
 require("firebase/auth");
 require("firebase/storage");
 
@@ -18,7 +19,7 @@ adm.initializeApp({
 
 
 
-const uri = "mongodb+srv://tievo:sdBVjd8GQGsw6Jag@lurien.1yjjv.mongodb.net/lurien?retryWrites=true&w=majority";
+const uri = process.env.MONGO_URI;
 //const uri = 'mongodb://localhost:27017/lurien'
 
 app.use(express.static(path.join(__dirname, 'client/build')))
