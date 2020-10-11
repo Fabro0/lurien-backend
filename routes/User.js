@@ -108,9 +108,10 @@ userRouter.get('/mod', async (req, res) => {
 })
 userRouter.post('/registerNew', (req, res) => {
     const { dni, companyID, role, username } = req.body;
-    UserNew.findOne({ dni }, (err, user) => {
+    mongoose.connection.useDb("lurien").collection("usernews").findOne({ dni }, (err, user) => {
         if (err)
-            return res.json({ message: { msgBody: "Error has occured", msgError: true } });
+            return res.json({ message: { msgBody: "Error has occured",err, msgError: true } });
+
         if (user)
             return res.json({ message: { msgBody: "Username is already taken", msgError: true } });
         else {
