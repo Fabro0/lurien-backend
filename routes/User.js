@@ -110,18 +110,18 @@ userRouter.post('/registerNew', (req, res) => {
     const { dni, companyID, role, username } = req.body;
     mongoose.connection.useDb("lurien").collection("usernews").findOne({ dni }, (err, user) => {
         if (err)
-            return res.json({ message: { msgBody: "Error has occured",err, msgError: true } });
+            return res.json({ message: { msgBody: "Hubo un error con el pedido al servidor, ya nos estamos encargando!",err, msgError: true } });
 
         if (user)
-            return res.json({ message: { msgBody: "Username is already taken", msgError: true } });
+            return res.json({ message: { msgBody: "Ese nombre o DNI ya esta existe en esta compañia!", msgError: true } });
         else {
             const newUser = new UserNew({ username, dni, companyID, role });
             newUser.save(err => {
                 if (err) {
-                    return res.json({ message: { msgBody: "Error has occured", msgError: true } });
+                    return res.json({ message: { msgBody: "Hubo un error con el pedido al servidor, ya estamos solucionando!", msgError: true } });
                 }
                 else
-                    return res.status(201).json({ message: { msgBody: "Account successfully created", msgError: false } });
+                    return res.status(201).json({ message: { msgBody: "Usuario Creado!", msgError: false } });
             });
         }
     });
@@ -251,7 +251,7 @@ userRouter.post('/addFotos/:dni', async (req, res) => {
         doc.save()
 
     })
-    res.json({ message: { msgBody: "todo ok", msgError: false } })
+    res.json({ message: { msgBody: "Todo salio bien!", msgError: false } })
 
 })
 const signToken = userID => {
@@ -265,7 +265,7 @@ userRouter.put('/register', async (req, res) => {
     const user_ = await UserNew.find({ companyID: companyID, dni: dni, createdAccount: false })
     if (user_.length !== 0 && user_ !== []) {
         await UserNew.findOne({ dni: dni }, async function (err, doc) {
-            if (err) return false;
+            if (err) return res.json({ message: { msgBody: "Hubo un error con el pedido al servidor, ya nos encargamos!", msgError: true } });
             const qrPin = makeid(25)
             const users = await UserNew.find({ username: username })
             if (users.length === 0) {
@@ -276,7 +276,7 @@ userRouter.put('/register', async (req, res) => {
                 doc.qrPin = qrPin;
                 doc.save()
             } else {
-                res.json({ message: { msgBody: "username taken", msgError: true } })
+                res.json({ message: { msgBody: "El usuario ingresado ya está en uso, prueba otro!", msgError: true } })
             }
             res.json({ message: { msgBody: "cuenta reg", msgError: false } })
             const python = spawn('python', ['qr_code.py', dni, companyID, qrPin])
@@ -301,7 +301,7 @@ userRouter.put('/register', async (req, res) => {
             });
         })
     } else {
-        res.json({ message: { msgBody: "hubo un error", msgError: true } });
+        res.json({ message: { msgBody: "Chequea si los datos estan bien ingresados!", msgError: true } });
     }
 });
 userRouter.post('/login', passport.authenticate('local', { session: false }), async (req, res) => {
