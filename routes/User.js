@@ -107,15 +107,19 @@ userRouter.get('/mod', async (req, res) => {
     return res.json(users)
 })
 userRouter.post('/registerNew', (req, res) => {
-    const { dni, companyID, role, username } = req.body;
+    const { dni, companyID, role, mail, manArea } = req.body;
     mongoose.connection.useDb("lurien").collection("usernews").findOne({ dni }, (err, user) => {
         if (err)
             return res.json({ message: { msgBody: "Hubo un error con el pedido al servidor, ya nos estamos encargando!",err, msgError: true } });
 
         if (user)
             return res.json({ message: { msgBody: "Ese nombre o DNI ya esta existe en esta compañia!", msgError: true } });
+        
+        if (role != "mod" && manArea != null)
+            return res.json({ message: { msgBody: "Estas intentando asignarle un area a un user", msgError: true } });
+            
         else {
-            const newUser = new UserNew({ username, dni, companyID, role });
+            const newUser = new UserNew({ mail, dni, companyID, role, manArea});
             newUser.save(err => {
                 if (err) {
                     return res.json({ message: { msgBody: "Hubo un error con el pedido al servidor, ya estamos solucionando!", msgError: true } });
@@ -272,7 +276,7 @@ userRouter.put('/register', async (req, res) => {
                 doc.password = password;
                 doc.username = username;
                 doc.mail = mail;
-                doc.createdAccount = true;
+                doc.createdAccount = true; 
                 doc.qrPin = qrPin;
                 doc.save()
             } else {

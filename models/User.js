@@ -13,6 +13,10 @@ const UserSchema = new mongoose.Schema({
         default: "user",
         enum: ['user', 'admin','mod'],
     },
+    manArea: {
+        type: String, //a cargo de area x, solo si sos mod
+        default: null
+    },
     dni: {
         type: Number,
         unique: true
@@ -26,6 +30,10 @@ const UserSchema = new mongoose.Schema({
     },
     mail: {
         type: String,
+    },
+    verMail: {
+        type: Boolean,
+        default: false
     },
     createdAccount: {
         type: Boolean,
