@@ -108,25 +108,37 @@ userRouter.get('/mod', async (req, res) => {
 })
 userRouter.post('/registerNew', (req, res) => {
     const { dni, companyID, role, mail, manArea } = req.body;
+    
     mongoose.connection.useDb("lurien").collection("usernews").findOne({ dni }, (err, user) => {
+        var errorMan = new Boolean(false);
         if (err)
             return res.json({ message: { msgBody: "Hubo un error con el pedido al servidor, ya nos estamos encargando!",err, msgError: true } });
 
         if (user)
             return res.json({ message: { msgBody: "Ese nombre o DNI ya esta existe en esta compañia!", msgError: true } });
         
-        if (role != "mod" && manArea != null)
+        if (role != "mod" && manArea != null){
+            errorMan = true;
             return res.json({ message: { msgBody: "Estas intentando asignarle un area a un user", msgError: true } });
+        }
+        
+        if (role == "mod" && manArea == null){
+            errorMan = true;
+            return res.json({ message: { msgBody: "No le asignaste un area de manejo al manager", msgError: true } });
+        }
+
             
         else {
-            const newUser = new UserNew({ mail, dni, companyID, role, manArea});
-            newUser.save(err => {
-                if (err) {
-                    return res.json({ message: { msgBody: "Hubo un error con el pedido al servidor, ya estamos solucionando!", msgError: true } });
-                }
-                else
-                    return res.status(201).json({ message: { msgBody: "Usuario Creado!", msgError: false } });
+            if(!errorMan){
+                const newUser = new UserNew({ mail, dni, companyID, role, manArea});
+                newUser.save(err => {
+                    if (err) {
+                        return res.json({ message: { msgBody: "Hubo un error con el pedido al servidor, ya estamos solucionando!", msgError: true } });
+                    }
+                    else
+                        return res.status(201).json({ message: { msgBody: "Usuario Creado!", msgError: false } });
             });
+            }
         }
     });
 });
