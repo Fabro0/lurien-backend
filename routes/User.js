@@ -102,35 +102,45 @@ userRouter.get('/hola/:companyid/:dni', async (req, res) => {
         })
     })
 })
+
+//get all users area == area mandada && role == 'user' uwu
+userRouter.get('/manUser', async (req, res) => {
+    const {area} = req.body;
+    const users = await UserNew.find({area:{ $eq: area}, role: 'user'});
+    if (users.length > 0) return res.json(users)
+    else return res.send('uwudie')
+})
+
 userRouter.get('/mod', async (req, res) => {
     const users = await UserNew.find()
     return res.json(users)
 })
 userRouter.post('/registerNew', (req, res) => {
-    const { dni, companyID, role, mail, manArea } = req.body;
-    
+    const { dni, companyID, role, mail, manArea, area } = req.body;
+    var errorMan = false;
     mongoose.connection.useDb("lurien").collection("usernews").findOne({ dni }, (err, user) => {
-        var errorMan = new Boolean(false);
+        
         if (err)
             return res.json({ message: { msgBody: "Hubo un error con el pedido al servidor, ya nos estamos encargando!",err, msgError: true } });
 
         if (user)
             return res.json({ message: { msgBody: "Ese nombre o DNI ya esta existe en esta compañia!", msgError: true } });
         
-        if (role != "mod" && manArea != null){
+        if (role != "manager" && manArea != null){
             errorMan = true;
-            return res.json({ message: { msgBody: "Estas intentando asignarle un area a un user", msgError: true } });
+            return res.json({ message: { msgBody: "Estas intentando asignarle un area a un noadmin", msgError: true } });
         }
         
-        if (role == "mod" && manArea == null){
+        if (role == "manager" && manArea == null){
             errorMan = true;
             return res.json({ message: { msgBody: "No le asignaste un area de manejo al manager", msgError: true } });
         }
 
             
         else {
+            console.log(errorMan)
             if(!errorMan){
-                const newUser = new UserNew({ mail, dni, companyID, role, manArea});
+                const newUser = new UserNew({ mail, dni, companyID, role, manArea, area});
                 newUser.save(err => {
                     if (err) {
                         return res.json({ message: { msgBody: "Hubo un error con el pedido al servidor, ya estamos solucionando!", msgError: true } });
