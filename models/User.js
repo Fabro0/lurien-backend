@@ -11,7 +11,14 @@ const UserSchema = new mongoose.Schema({
     role: {
         type: String,
         default: "user",
-        enum: ['user', 'admin','mod'],
+        enum: ['user', 'admin','mod','manager'],
+    },
+    manArea: {
+        type: String, //a cargo de area x, solo si sos mod
+        default: null
+    },
+    area:{
+        type: String
     },
     dni: {
         type: Number,
@@ -26,6 +33,10 @@ const UserSchema = new mongoose.Schema({
     },
     mail: {
         type: String,
+    },
+    verMail: {
+        type: Boolean,
+        default: false
     },
     createdAccount: {
         type: Boolean,

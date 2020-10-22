@@ -5,6 +5,7 @@ const passportConfig = require('../passport');
 const JWT = require('jsonwebtoken');
 const mongoose = require('mongoose')
 const UserNew = require('../models/User');
+const CompanyAreaNew = require('../models/CompanyAreas')
 const fs = require('fs');
 const { spawn } = require('child_process');
 const { S3, config } = require('aws-sdk')
@@ -102,27 +103,134 @@ userRouter.get('/hola/:companyid/:dni', async (req, res) => {
         })
     })
 })
+
+//get all users area == area mandada && role == 'user' uwu
+userRouter.get('/manUser', async (req, res) => {
+    const {area} = req.body;
+    const users = await UserNew.find({area:{ $eq: area}, role: 'user'});
+    if (users.length > 0) return res.json(users)
+    else return res.send('uwudie')
+})
+
 userRouter.get('/mod', async (req, res) => {
     const users = await UserNew.find()
     return res.json(users)
 })
+
+userRouter.get('/deleteArea', async (req, res) => {
+    const {companyId, area} = req.body;
+    mongoose.connection.useDb("lurien").collection("companyareas")
+    await CompanyAreaNew.findOne({companyId}, (err, company) =>{
+        console.log(company.areas)
+        if(err)
+            return res.json({ message: { msgBody: "Hubo un error con el pedido al servidor, ya nos estamos encargando!",err, msgError: true } });
+        
+        else{
+            var array = company.areas
+            if (array.includes(area)){
+                array = array.filter(e => e !== area);
+                // console.log('array le saco: ' + array)
+                company.areas = array;
+                // console.log('company.areas: ' + company.areas)
+                company.save()
+                return res.json({ message: { msgBody: company.areas, msgError: false } });
+            }
+        }
+    })
+
+})
+
+userRouter.get('/retrieveArea', async (req, res)=>{
+    const {companyId} = req.body;
+    console.log(companyId)
+    await mongoose.connection.useDb("lurien").collection("companyareas").findOne({companyId}, (err, company) =>{
+        if(err)
+            return res.json({ message: { msgBody: "Hubo un error con el pedido al servidor, ya nos estamos encargando!",err, msgError: true } });
+        else{
+            if (!company){
+                return res.json({ message: { msgBody: "Error area compania uwu", msgError: true } });
+            }
+            else{
+                console.log(company)
+                return res.json({ message: { msgBody: company.areas, msgError: false } });
+            }
+        }
+    })
+})
+
+
+
+userRouter.post('/addArea', async (req, res)=>{
+    const {companyId, areas} = req.body;
+    console.log(companyId)
+    mongoose.connection.useDb("lurien").collection("companyareas")
+    await CompanyAreaNew.findOne({companyId}, (err, company) =>{
+        if(err)
+            return res.json({ message: { msgBody: "Hubo un error con el pedido al servidor, ya nos estamos encargando!",err, msgError: true } });
+        else{
+            if (!company){
+                console.log(company)
+                const newCompany = new CompanyAreaNew({areas:areas, companyId: companyId});
+                console.log(newCompany)
+                newCompany.save(err => {
+                    if (err) {
+                        return res.json({ message: { msgBody: "Hubo un error con el pedido al servidor, ya estamos solucionando!", msgError: true } });
+                    }
+                    else
+                        return res.status(201).json({ message: { msgBody: "Company slot creado!", msgError: false } });
+                })
+
+            }
+            else{
+                var array = company.areas
+                if (!array.includes(areas)){
+                    array.push(areas)
+                    company.areas = array;
+                    company.save()
+                    return res.json({ message: { msgBody: company.areas, msgError: false } });
+                }
+                else
+                    return res.json({ message: { msgBody: "ese area ya existe", msgError: true } });
+                
+            }
+        }
+    })
+})
+
 userRouter.post('/registerNew', (req, res) => {
-    const { dni, companyID, role, username } = req.body;
+    const { dni, companyID, role, mail, manArea, area } = req.body;
+    var errorMan = false;
     mongoose.connection.useDb("lurien").collection("usernews").findOne({ dni }, (err, user) => {
+        
         if (err)
             return res.json({ message: { msgBody: "Hubo un error con el pedido al servidor, ya nos estamos encargando!",err, msgError: true } });
 
         if (user)
             return res.json({ message: { msgBody: "Ese nombre o DNI ya esta existe en esta compañia!", msgError: true } });
+        
+        if (role != "manager" && manArea != null){
+            errorMan = true;
+            return res.json({ message: { msgBody: "Estas intentando asignarle un area a un noadmin", msgError: true } });
+        }
+        
+        if (role == "manager" && manArea == null){
+            errorMan = true;
+            return res.json({ message: { msgBody: "No le asignaste un area de manejo al manager", msgError: true } });
+        }
+
+            
         else {
-            const newUser = new UserNew({ username, dni, companyID, role });
-            newUser.save(err => {
-                if (err) {
-                    return res.json({ message: { msgBody: "Hubo un error con el pedido al servidor, ya estamos solucionando!", msgError: true } });
-                }
-                else
-                    return res.status(201).json({ message: { msgBody: "Usuario Creado!", msgError: false } });
+            console.log(errorMan)
+            if(!errorMan){
+                const newUser = new UserNew({ mail, dni, companyID, role, manArea, area});
+                newUser.save(err => {
+                    if (err) {
+                        return res.json({ message: { msgBody: "Hubo un error con el pedido al servidor, ya estamos solucionando!", msgError: true } });
+                    }
+                    else
+                        return res.status(201).json({ message: { msgBody: "Usuario Creado!", msgError: false } });
             });
+            }
         }
     });
 });
@@ -272,7 +380,7 @@ userRouter.put('/register', async (req, res) => {
                 doc.password = password;
                 doc.username = username;
                 doc.mail = mail;
-                doc.createdAccount = true;
+                doc.createdAccount = true; 
                 doc.qrPin = qrPin;
                 doc.save()
             } else {
