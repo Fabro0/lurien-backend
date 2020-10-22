@@ -16,11 +16,12 @@ userRouter.post("/companyid", async (req, res) => {
     // let nombres = ["brenda", "tievo", "benatize", "gati", "fabro"]
     // let name = nombres[Math.floor(Math.random() * nombres.length)];
     // let hour = Date.now()
-    const {name,hour,companyid} = req.body;
+    const {name,hour,companyid, img} = req.body;
 
     pusher.trigger(companyid, 'updateEntrada', {
         'name': name,
-        'hora': hour
+        'hora': hour,
+        'img': img
     });
     res.json({ companyid, name, hour })
 
