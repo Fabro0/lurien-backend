@@ -38,7 +38,7 @@ mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true, useCrea
 app.use('/api/user', require('./routes/User'));
 app.use('/api/upload',require('./routes/Photos'));
 app.use('/api/qr',require('./routes/qr'));
-app.use('/api/debug',require('./routes/entradas'));
+app.use('/api/entradas',require('./routes/entradas'));
 
 
 app.listen(8080, () => {
