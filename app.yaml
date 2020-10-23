@@ -6,3 +6,9 @@ handlers:
   script: auto  
   secure: always  
   redirect_http_response_code: 301
+
+env_variables:
+  MONGO_URI : "mongodb+srv://tievo:sdBVjd8GQGsw6Jag@lurien.1yjjv.mongodb.net/lurien?retryWrites=true&w=majority"
+  IP: "192.168.0.103"
+  hidden : "baruj"
+  firebase : '{"apiKey":"AIzaSyBvvZR8bjCKg8kGxXviw43j_iv2Kp3Zgtw","authDomain":"test-lurien.firebaseapp.com","databaseURL":"https://test-lurien.firebaseio.com","projectId":"test-lurien","storageBucket":"test-lurien.appspot.com","messagingSenderId":"973221769406","appId":"1:973221769406:web:2653edd347f49bda3ceeef","measurementId":"G-HJ0BJ08H7L"}'
