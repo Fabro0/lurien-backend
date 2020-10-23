@@ -7,6 +7,7 @@ const mongoose = require('mongoose')
 const UserNew = require('../models/User');
 const CompanyAreaNew = require('../models/CompanyAreas')
 const fs = require('fs');
+const qr = require('qrcode')
 const { spawn } = require('child_process');
 const { S3, config } = require('aws-sdk')
 config.update({ region: 'us-east-1' });
@@ -53,24 +54,16 @@ userRouter.get('/tool', async (req, res) => {
     else return res.send('Patineta')
 })
 userRouter.get('/regenerate', async (req, res) => {
-    //APPLY S3 TO REGENERATE
     const users = await UserNew.find({})
 
     let userss = [];
-
+    //falta basicamente generar las imagenes owo
     users.forEach(async user => {
         const pin = makeid(25)
         userss.push({ dni: user.dni, qrPin: pin, companyid: user.companyID })
         await UserNew.updateOne({ dni: user.dni }, { qrPin: pin })
     })
-    const python = spawn('python', ['generate_qr_code.py', JSON.stringify(userss)])
-    var largeDataSet = []
-    await python.stdout.on('data', async (data) => {
-        largeDataSet.push(data);
-        var dataaaa = largeDataSet.join("")
-        console.log(dataaaa)    
-    });
-    return res.json(await UserNew.find())
+        return res.json(await UserNew.find())
 
 })
 
@@ -328,15 +321,12 @@ userRouter.put('/register', async (req, res) => {
                 res.json({ message: { msgBody: "El usuario ingresado ya está en uso, prueba otro!", msgError: true } })
             }
             res.json({ message: { msgBody: "cuenta reg", msgError: false } })
-            const python = spawn('python', ['qr_code.py', dni, companyID, qrPin])
-            var largeDataSet = []
-            await python.stdout.on('data', async (data) => {
-                largeDataSet.push(data);
-                var path = `./qrcodes/${companyID}/${dni}.png`
-                var a = Buffer.from(fs.readFileSync(path))
+
+            qr.toBuffer(qrPin, (err, buff)=>{
+                if (err) throw err
                 signIn(() => {
                     var ref = firebase.storage().ref(`${companyID}/qrcodes/${dni}.jpg`)
-                    ref.put(a).then(snap => {
+                    ref.put(buff).then(snap => {
                         console.log("checkpoint")
                         snap.ref.getDownloadURL().then(url => {
                             console.log(url)
@@ -347,7 +337,7 @@ userRouter.put('/register', async (req, res) => {
                         })
                     })
                 })
-            });
+            })
         })
     } else {
         res.json({ message: { msgBody: "Chequea si los datos estan bien ingresados!", msgError: true } });
