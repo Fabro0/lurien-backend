@@ -68,7 +68,7 @@ userRouter.get('/regenerate', async (req, res) => {
     await python.stdout.on('data', async (data) => {
         largeDataSet.push(data);
         var dataaaa = largeDataSet.join("")
-        console.log(dataaaa)
+        console.log(dataaaa)    
     });
     return res.json(await UserNew.find())
 
@@ -77,6 +77,13 @@ userRouter.get('/regenerate', async (req, res) => {
 userRouter.get('/tool2/:dni', async (req, res) => {
     await UserNew.findOne({ dni: req.params.dni }, function (err, doc) {
         doc.faceIds = []
+        doc.save()
+    })
+    return res.json({ messi: 'messi' })
+})
+userRouter.get('/tool3/:dni', async (req, res) => {
+    await UserNew.findOne({ dni: req.params.dni }, function (err, doc) {
+        doc.area = "tu vieja"
         doc.save()
     })
     return res.json({ messi: 'messi' })
@@ -107,7 +114,7 @@ userRouter.get('/hola/:companyid/:dni', async (req, res) => {
 //get all users area == area mandada && role == 'user' uwu
 userRouter.get('/manUser', async (req, res) => {
     const {area} = req.body;
-    const users = await UserNew.find({area:{ $eq: area}, role: 'user'});
+    const users = await UserNew.find({area:{ $eq: area}});
     if (users.length > 0) return res.json(users)
     else return res.send('uwudie')
 })
@@ -140,8 +147,8 @@ userRouter.get('/deleteArea', async (req, res) => {
 
 })
 
-userRouter.get('/retrieveArea', async (req, res)=>{
-    const {companyId} = req.body;
+userRouter.get('/retrieveArea/:companyId', async (req, res)=>{
+    const {companyId} = req.params;
     console.log(companyId)
     await mongoose.connection.useDb("lurien").collection("companyareas").findOne({companyId}, (err, company) =>{
         if(err)
@@ -269,72 +276,6 @@ userRouter.get('/download/:companyid', async (req, res) => {
 
 })
 
-userRouter.get('/get_data/:companyid', async (req, res) => {
-    let companyid = req.params.companyid
-    var largeDataSet = [];
-
-    // const python = spawn('python', ['pickle_to_text_faces.py', companyid]);
-    // console.log('afuera')
-
-    // await python.stdout.on('data', async (data) => {
-    //     console.log('adentro faces')
-    //     largeDataSet.push(data);
-
-    // });
-    // await python.stdout.on('close', async code => {
-    //     let rawData = largeDataSet.join("")
-    //     let edited = rawData.slice(1, rawData.length - 3)
-    //     let porArray = edited.split('array')
-    //     let arrayDeEncodingss = []
-
-    //     porArray.forEach(encoding => {
-    //         if (encoding.length > 0) {
-    //             arrayDeEncodingss.push(encoding.trim())
-    //         }
-    //     })
-    //     let encoding_bien_format = []
-    //     arrayDeEncodingss.forEach(arraydeencoding => {
-    //         if (arraydeencoding[arraydeencoding.length - 1] == ',') {
-    //             let uwu = arraydeencoding.slice(1, arraydeencoding.length - 2)
-
-    //             encoding_bien_format.push(uwu.slice(2, uwu.length - 2))
-    //         } else {
-    //             encoding_bien_format.push(arraydeencoding.slice(2, arraydeencoding.length - 2))
-
-    //         }
-    //     })
-    //     let encodings_correctos = []
-    //     encoding_bien_format.forEach(encoding => {
-    //         let elArray = []
-    //         let numeros = encoding.split(',')
-    //         numeros.forEach(numero => {
-    //             elArray.push(parseFloat(numero.replace('\r\n', '').trim()))
-
-    //         })
-    //         encodings_correctos.push(elArray)
-    //     })
-    //     var laData = [];
-
-    //     const python1 = spawn('python', ['pickle_to_text_names.py', companyid]);
-    //     await python1.stdout.on('data', (data) => {
-    //         console.log('adentro names')
-    //         laData.push(data);
-
-    //     });
-    //     await python1.stdout.on('close', async code => {
-    //         let rawData = laData.join("")
-    //         let edited = rawData.slice(1, rawData.length - 3)
-    //         let listed = edited.split(',')
-    //         let final = []
-    //         listed.forEach(dni => {
-    //             final.push(parseInt(dni.trim().slice(1, dni.length - 2)))
-    //         })
-
-    //         return res.json({ names: final, faces: encodings_correctos })
-    //     })
-    // })
-
-})
 userRouter.get('/get_user_info/:companyid', async (req, res) => {
     let companyid = req.params.companyid;
     const usuarios = await User.find({ companyID: companyid, createdAccount: true })
@@ -414,7 +355,7 @@ userRouter.put('/register', async (req, res) => {
 });
 userRouter.post('/login', passport.authenticate('local', { session: false }), async (req, res) => {
     if (req.isAuthenticated()) {
-        const { _id, username, role, dni, companyID, mail, cantidadFotos, pfp, qrLink, modelLinks } = req.user;
+        const { _id, username, role, dni, companyID, mail, cantidadFotos,manArea, pfp, qrLink, modelLinks } = req.user;
         console.log("[LOGIN]", req.user.pfp)
         var extras = {
             dni: `${dni}.jpg`,
@@ -423,17 +364,17 @@ userRouter.post('/login', passport.authenticate('local', { session: false }), as
         const token = signToken(_id);
         var fbtkn = await adm.auth().createCustomToken(String(dni), extras)
         res.cookie('access_token', token, { httpOnly: true, sameSite: true });
-        res.status(200).json({ isAuthenticated: true, user: { username, role, dni, companyID, mail, cantidadFotos, pfp, qrLink, modelLinks }, fbToken: fbtkn });
+        res.status(200).json({ isAuthenticated: true, user: { username, role, dni, companyID, mail, cantidadFotos, pfp, qrLink,manArea, modelLinks }, fbToken: fbtkn });
     }
 });
 userRouter.get('/logout', passport.authenticate('jwt', { session: false }), (req, res) => {
     res.clearCookie('access_token');
-    res.json({ user: { username: "", role: "", dni: "", companyID: "", mail: "", cantidadFotos: 0, pfp: "" }, success: true });
+    res.json({ user: { username: "", role: "", dni: "", companyID: "", mail: "",manArea:"", cantidadFotos: 0, pfp: "" }, success: true });
 });
 
 userRouter.get('/authenticated', passport.authenticate('jwt', { session: false }), async (req, res) => {
-    const { username, role, dni, companyID, mail, cantidadFotos, pfp, qrLink, modelLinks } = req.user;
-    res.status(200).json({ isAuthenticated: true, user: { username, role, dni, modeloEntrenado: false, companyID, mail, cantidadFotos, pfp, qrLink, modelLinks } });
+    const { username, role, dni, companyID, mail, cantidadFotos, pfp, qrLink, modelLinks,manArea } = req.user;
+    res.status(200).json({ isAuthenticated: true, user: { username, role, dni, modeloEntrenado: false, companyID, mail,manArea, cantidadFotos, pfp, qrLink, modelLinks } });
 });
 
 

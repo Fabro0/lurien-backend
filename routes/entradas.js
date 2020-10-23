@@ -28,14 +28,14 @@ userRouter.post("/new", async (req, res) => {
     res.json({ companyid, name, hour })
 
 })
-userRouter.get("/historial", async (req,res) =>{
+userRouter.get("/historial/:companyId", async (req,res) =>{
     let hola = "culo";
-    
+    let companyID = req.params.companyId
     let limit = 10;
     let skip = 0;
 
-    let entradas = await Entradas.find({}).limit(limit).skip(skip).sort({_id:-1});
-
+    let entradas = await Entradas.find().limit(limit).skip(skip).sort({_id:-1});
+    console.log(entradas)
     res.json({entradas})
 })
 module.exports = userRouter;

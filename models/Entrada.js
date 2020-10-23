@@ -9,6 +9,9 @@ const EntradasSchema = new mongoose.Schema({
     },
     img: {
         type: String
+    },
+    companyID:{
+        type:String,
     }
 });
 
