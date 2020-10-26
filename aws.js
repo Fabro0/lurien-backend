@@ -93,15 +93,14 @@ class AWSManager {
               return console.log({ messageError: true, data: { message: 'Error creando la colección. Credenciales/colección ya existente.' } });
             }
             else {
-              test(create_params, face_list, dni)
+              test(create_params, face_list, dni,res)
             }
           })
         } else {
-          test(create_params, face_list, dni)
+          test(create_params, face_list, dni,res)
         }
       }
     });
-    return res.json('donete')
   }
 
   listFaces(faces_params) {
@@ -120,7 +119,7 @@ class AWSManager {
 
 }
 
-function test(create_params, face_list, dni) {
+function test(create_params, face_list, dni,res) {
   var faceIdArray = []
   function onlyUnique(value, index, self) {
     return self.indexOf(value) === index;
@@ -149,7 +148,7 @@ function test(create_params, face_list, dni) {
           await UserNew.findOne({ dni: dni }, function (err, doc) {
             if (err) {
               console.log(err)
-              return console.log({ messageError: true, data: { message: 'Ni idea, pincho algo (Linea 111, aws.js)' } })
+              return res.json({ messageError: true, data: { message: 'Ni idea, pincho algo (Linea 111, aws.js)' } })
             }
             else {
               var actualArray = doc.faceIds
@@ -169,8 +168,9 @@ function test(create_params, face_list, dni) {
 
       }
     });
-    return console.log({ messageError: false, data: { message: 'Fotos subidas, colección creada.' } })
   });
+  return res.json({ messageError: false, data: { message: 'Fotos subidas, colección creada.' } })
+
 }
 
 
