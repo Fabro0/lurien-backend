@@ -108,8 +108,9 @@ userRouter.get('/hola/:companyid/:dni', async (req, res) => {
 userRouter.get('/manUser', async (req, res) => {
     const {area} = req.body;
     const users = await UserNew.find({area:{ $eq: area}});
-    if (users.length > 0) return res.json(users)
-    else return res.send('uwudie')
+    console.log(users)
+    if (users.length > 0) return res.json({ message: { msgBody: users, msgError: false } })
+    else return res.json({ message: { msgBody: [], msgError: true } })
 })
 
 userRouter.get('/mod', async (req, res) => {
@@ -198,7 +199,11 @@ userRouter.post('/addArea', async (req, res)=>{
 })
 
 userRouter.post('/registerNew', (req, res) => {
-    const { dni, companyID, role, mail, manArea, area } = req.body;
+    let { dni, companyID, role, mail, manArea, area } = req.body;
+    console.log("HOLA",dni, companyID, role, mail, manArea, area )
+    
+    manArea !== null ? area = manArea : area=area
+
     var errorMan = false;
     mongoose.connection.useDb("lurien").collection("usernews").findOne({ dni }, (err, user) => {
         
@@ -223,6 +228,7 @@ userRouter.post('/registerNew', (req, res) => {
             console.log(errorMan)
             if(!errorMan){
                 const newUser = new UserNew({ mail, dni, companyID, role, manArea, area});
+                console.log("AREA",area)
                 newUser.save(err => {
                     if (err) {
                         return res.json({ message: { msgBody: "Hubo un error con el pedido al servidor, ya estamos solucionando!", msgError: true } });
