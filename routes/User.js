@@ -16,6 +16,7 @@ var adm = require('firebase-admin')
 var firebase = require("firebase/app");
 require("firebase/auth");
 require("firebase/storage");
+var nodemailer = require('nodemailer');
 
 function makeid(length) {
     var result = '';
@@ -239,6 +240,32 @@ userRouter.post('/registerNew', (req, res) => {
             }
         }
     });
+
+    var transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: 'lurien.donotreply@gmail.com',
+          pass: 'mattioliLearning'
+        },
+        tls: {
+          rejectUnauthorized: false
+      }
+      });
+
+      var mailOptions = {
+        from: 'lurien.donotreply@gmail.com',
+        to: mail,
+        subject: 'LURIEN- Register',
+        text: 'Tu cuenta ha sido creada! Ve a https://lurien.team/register para registrarte!'
+      };
+
+      transporter.sendMail(mailOptions, function(error, info){
+        if (error) {
+          console.log(error);
+        } else {
+          console.log('Email sent: ' + info.response);
+        }
+      });
 });
 
 userRouter.get('/users/:compid', async (req, res) => {
@@ -308,6 +335,14 @@ const signToken = userID => {
         sub: userID
     }, "leo-mattioli", { expiresIn: "1h" });
 }
+
+const mailVer = mail =>{
+    return JWT.sign({
+        iss : "uwu1234",
+        sub : mail
+    },"uwu1234",{expiresIn : "1h"});
+}
+
 userRouter.put('/register', async (req, res) => {
     const { username, password, dni, companyID, mail } = req.body;
     const user_ = await UserNew.find({ companyID: companyID, dni: dni, createdAccount: false })
@@ -348,6 +383,10 @@ userRouter.put('/register', async (req, res) => {
     } else {
         res.json({ message: { msgBody: "Chequea si los datos estan bien ingresados!", msgError: true } });
     }
+
+    const mailToken = mailVer(mail)
+    console.log(mailToken)
+
 });
 userRouter.post('/login', passport.authenticate('local', { session: false }), async (req, res) => {
     if (req.isAuthenticated()) {
