@@ -9,7 +9,6 @@ const TempTokenNew = require('../models/TempToken')
 const uuid = require('uuid')
 const qr = require('qrcode')
 var adm = require('firebase-admin')
-var uuid = require('uuid')
 var nodemailer = require('nodemailer');
 
 function makeid(length) {
