@@ -1,24 +1,16 @@
 const express = require('express');
 const userRouter = express.Router();
 const passport = require('passport');
-const passportConfig = require('../passport');
 const JWT = require('jsonwebtoken');
 const mongoose = require('mongoose')
 const UserNew = require('../models/User');
 const CompanyAreaNew = require('../models/CompanyAreas')
 const TempTokenNew = require('../models/TempToken')
-const fs = require('fs');
+const uuid = require('uuid')
 const qr = require('qrcode')
-const { spawn } = require('child_process');
-const { S3, config } = require('aws-sdk')
-config.update({ region: 'us-east-1' });
-const btoa = require('btoa');
 var adm = require('firebase-admin')
-var firebase = require("firebase/app");
-require("firebase/auth");
-require("firebase/storage");
+var uuid = require('uuid')
 var nodemailer = require('nodemailer');
-const { text } = require('express');
 
 function makeid(length) {
     var result = '';
@@ -33,11 +25,6 @@ function makeid(length) {
     else {
         return result;
     }
-}
-
-async function signIn(callback) {
-    var token = await adm.auth().createCustomToken("amudejemedejamu", { hidden: process.env.hidden })
-    firebase.auth().signInWithCustomToken(token).then(() => callback())
 }
 
 async function validatePin(qrPin) {
@@ -66,7 +53,7 @@ userRouter.get('/regenerate', async (req, res) => {
         userss.push({ dni: user.dni, qrPin: pin, companyid: user.companyID })
         await UserNew.updateOne({ dni: user.dni }, { qrPin: pin })
     })
-        return res.json(await UserNew.find())
+    return res.json(await UserNew.find())
 
 })
 
@@ -85,32 +72,11 @@ userRouter.get('/tool3/:dni', async (req, res) => {
     return res.json({ messi: 'messi' })
 })
 
-userRouter.get('/hola/:companyid/:dni', async (req, res) => {
-    var companyID = req.params.companyid
-    var dni = parseInt(req.params.dni)
-    var path = `./qrcodes/${companyID}/${dni}.png`
-    var a = Buffer.from(fs.readFileSync(path))
-    signIn(() => {
-        var ref = firebase.storage().ref(`${companyID}/qrcodes/${dni}.jpg`)
-        ref.put(a).then(snap => {
-            console.log("checkpoint")
-            snap.ref.getDownloadURL().then(url => {
-                console.log(url)
-                mongoose.connection.useDb("lurien").collection("usernews").findOneAndUpdate(
-                    { dni: parseInt(dni) },
-                    { $set: { qrLink: url } }, (err,ress)=>{
-                        if (err) return res.json("noo")
-                        else return res.json("sii oo")
-                    })
-            })
-        })
-    })
-})
 
 //get all users area == area mandada && role == 'user' uwu
 userRouter.get('/manUser', async (req, res) => {
-    const {area} = req.body;
-    const users = await UserNew.find({area:{ $eq: area}});
+    const { area } = req.body;
+    const users = await UserNew.find({ area: { $eq: area } });
     console.log(users)
     if (users.length > 0) return res.json({ message: { msgBody: users, msgError: false } })
     else return res.json({ message: { msgBody: [], msgError: true } })
@@ -122,16 +88,16 @@ userRouter.get('/mod', async (req, res) => {
 })
 
 userRouter.get('/deleteArea', async (req, res) => {
-    const {companyId, area} = req.body;
+    const { companyId, area } = req.body;
     mongoose.connection.useDb("lurien").collection("companyareas")
-    await CompanyAreaNew.findOne({companyId}, (err, company) =>{
+    await CompanyAreaNew.findOne({ companyId }, (err, company) => {
         console.log(company.areas)
-        if(err)
-            return res.json({ message: { msgBody: "Hubo un error con el pedido al servidor, ya nos estamos encargando!",err, msgError: true } });
-        
-        else{
+        if (err)
+            return res.json({ message: { msgBody: "Hubo un error con el pedido al servidor, ya nos estamos encargando!", err, msgError: true } });
+
+        else {
             var array = company.areas
-            if (array.includes(area)){
+            if (array.includes(area)) {
                 array = array.filter(e => e !== area);
                 // console.log('array le saco: ' + array)
                 company.areas = array;
@@ -144,17 +110,17 @@ userRouter.get('/deleteArea', async (req, res) => {
 
 })
 
-userRouter.get('/retrieveArea/:companyId', async (req, res)=>{
-    const {companyId} = req.params;
+userRouter.get('/retrieveArea/:companyId', async (req, res) => {
+    const { companyId } = req.params;
     console.log(companyId)
-    await mongoose.connection.useDb("lurien").collection("companyareas").findOne({companyId}, (err, company) =>{
-        if(err)
-            return res.json({ message: { msgBody: "Hubo un error con el pedido al servidor, ya nos estamos encargando!",err, msgError: true } });
-        else{
-            if (!company){
+    await mongoose.connection.useDb("lurien").collection("companyareas").findOne({ companyId }, (err, company) => {
+        if (err)
+            return res.json({ message: { msgBody: "Hubo un error con el pedido al servidor, ya nos estamos encargando!", err, msgError: true } });
+        else {
+            if (!company) {
                 return res.json({ message: { msgBody: "Error area compania uwu", msgError: true } });
             }
-            else{
+            else {
                 console.log(company)
                 return res.json({ message: { msgBody: company.areas, msgError: false } });
             }
@@ -164,17 +130,17 @@ userRouter.get('/retrieveArea/:companyId', async (req, res)=>{
 
 
 
-userRouter.post('/addArea', async (req, res)=>{
-    const {companyId, areas} = req.body;
+userRouter.post('/addArea', async (req, res) => {
+    const { companyId, areas } = req.body;
     console.log(companyId)
     mongoose.connection.useDb("lurien").collection("companyareas")
-    await CompanyAreaNew.findOne({companyId}, (err, company) =>{
-        if(err)
-            return res.json({ message: { msgBody: "Hubo un error con el pedido al servidor, ya nos estamos encargando!",err, msgError: true } });
-        else{
-            if (!company){
+    await CompanyAreaNew.findOne({ companyId }, (err, company) => {
+        if (err)
+            return res.json({ message: { msgBody: "Hubo un error con el pedido al servidor, ya nos estamos encargando!", err, msgError: true } });
+        else {
+            if (!company) {
                 console.log(company)
-                const newCompany = new CompanyAreaNew({areas:areas, companyId: companyId});
+                const newCompany = new CompanyAreaNew({ areas: areas, companyId: companyId });
                 console.log(newCompany)
                 newCompany.save(err => {
                     if (err) {
@@ -185,9 +151,9 @@ userRouter.post('/addArea', async (req, res)=>{
                 })
 
             }
-            else{
+            else {
                 var array = company.areas
-                if (!array.includes(areas)){
+                if (!array.includes(areas)) {
                     array.push(areas)
                     company.areas = array;
                     company.save()
@@ -195,7 +161,7 @@ userRouter.post('/addArea', async (req, res)=>{
                 }
                 else
                     return res.json({ message: { msgBody: "ese area ya existe", msgError: true } });
-                
+
             }
         }
     })
@@ -203,42 +169,42 @@ userRouter.post('/addArea', async (req, res)=>{
 
 userRouter.post('/registerNew', (req, res) => {
     let { dni, companyID, role, mail, manArea, area } = req.body;
-    console.log("HOLA",dni, companyID, role, mail, manArea, area )
-    
-    manArea !== null ? area = manArea : area=area
+    console.log("HOLA", dni, companyID, role, mail, manArea, area)
+
+    manArea !== null ? area = manArea : area = area
 
     var errorMan = false;
     mongoose.connection.useDb("lurien").collection("usernews").findOne({ dni }, (err, user) => {
-        
+
         if (err)
-            return res.json({ message: { msgBody: "Hubo un error con el pedido al servidor, ya nos estamos encargando!",err, msgError: true } });
+            return res.json({ message: { msgBody: "Hubo un error con el pedido al servidor, ya nos estamos encargando!", err, msgError: true } });
 
         if (user)
             return res.json({ message: { msgBody: "Ese nombre o DNI ya esta existe en esta compañia!", msgError: true } });
-        
-        if (role != "manager" && manArea != null){
+
+        if (role != "manager" && manArea != null) {
             errorMan = true;
             return res.json({ message: { msgBody: "Estas intentando asignarle un area a un noadmin", msgError: true } });
         }
-        
-        if (role == "manager" && manArea == null){
+
+        if (role == "manager" && manArea == null) {
             errorMan = true;
             return res.json({ message: { msgBody: "No le asignaste un area de manejo al manager", msgError: true } });
         }
 
-            
+
         else {
             console.log(errorMan)
-            if(!errorMan){
-                const newUser = new UserNew({ mail, dni, companyID, role, manArea, area});
-                console.log("AREA",area)
+            if (!errorMan) {
+                const newUser = new UserNew({ mail, dni, companyID, role, manArea, area });
+                console.log("AREA", area)
                 newUser.save(err => {
                     if (err) {
                         return res.json({ message: { msgBody: "Hubo un error con el pedido al servidor, ya estamos solucionando!", msgError: true } });
                     }
                     else
                         return res.status(201).json({ message: { msgBody: "Usuario Creado!", msgError: false } });
-            });
+                });
             }
         }
     });
@@ -246,32 +212,32 @@ userRouter.post('/registerNew', (req, res) => {
     mandarMail(mail, text)
 });
 
-function mandarMail(userTo, text){
+function mandarMail(userTo, text) {
     var transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
-          user: 'lurien.donotreply@gmail.com',
-          pass: 'mattioliLearning'
+            user: 'lurien.donotreply@gmail.com',
+            pass: 'mattioliLearning'
         },
         tls: {
-          rejectUnauthorized: false
-      }
-      });
+            rejectUnauthorized: false
+        }
+    });
 
-      var mailOptions = {
+    var mailOptions = {
         from: 'lurien.donotreply@gmail.com',
         to: userTo,
         subject: 'LURIEN- Register',
         html: text,
-      };
+    };
 
-      transporter.sendMail(mailOptions, function(error, info){
+    transporter.sendMail(mailOptions, function (error, info) {
         if (error) {
-          console.log(error);
+            console.log(error);
         } else {
-          console.log('Email sent: ' + info.response);
+            console.log('Email sent: ' + info.response);
         }
-      });
+    });
 }
 
 userRouter.get('/users/:compid', async (req, res) => {
@@ -285,12 +251,12 @@ userRouter.get('/delete/:_id', async (req, res) => {
     await UserNew.deleteOne({ "_id": id })
     var dni = user.dni;
     var company = user.companyID;
-    signIn(()=>{
-        var ref = firebase.storage().ref(`${company}/`)
-        ref.child(`pfp/${dni}.jpg`).delete()
-        ref.child(`qrcodes/${dni}.jpg`).delete()
-    })
 
+    //USE FIREBASE ADMIN TO DELETE ALL PICS FROM THE USER
+    var bucket = adm.storage().bucket("test-lurien.appspot.com")
+    bucket.file(`${company}/qrcodes/${dni}.png`).delete()
+    bucket.file(`${company}/pfp/${dni}.png`).delete()
+    bucket.deleteFiles({prefix: `${company}/model/${dni}/`})
 })
 
 
@@ -298,14 +264,6 @@ userRouter.get('/getFotos/:dni', async (req, res) => {
     const dni = req.params.dni;
     const users = await UserNew.findOne({ "dni": dni })
     return res.json({ cantidad: users.cantidadFotos })
-})
-userRouter.get('/download/:companyid', async (req, res) => {
-    const companyid = req.params.companyid
-    var lionelmessi = [
-        { path: './pickles/' + companyid + '/known_names', name: 'known_names' },
-        { path: './pickles/' + companyid + '/known_faces', name: 'known_faces' }]
-    return res.zip(lionelmessi);
-
 })
 
 userRouter.get('/get_user_info/:companyid', async (req, res) => {
@@ -342,13 +300,6 @@ const signToken = userID => {
     }, "leo-mattioli", { expiresIn: "1h" });
 }
 
-const mailVer = mail =>{
-    return JWT.sign({
-        iss : "uwu1234",
-        sub : mail
-    },"uwu1234",{expiresIn : "1h"});
-}
-
 userRouter.put('/register', async (req, res) => {
     const { username, password, dni, companyID, mail } = req.body;
     const user_ = await UserNew.find({ companyID: companyID, dni: dni, createdAccount: false })
@@ -361,7 +312,7 @@ userRouter.put('/register', async (req, res) => {
                 doc.password = password;
                 doc.username = username;
                 doc.mail = mail;
-                doc.createdAccount = true; 
+                doc.createdAccount = true;
                 doc.qrPin = qrPin;
                 doc.save()
             } else {
@@ -369,40 +320,51 @@ userRouter.put('/register', async (req, res) => {
             }
             res.json({ message: { msgBody: "cuenta reg", msgError: false } })
 
-            qr.toBuffer(qrPin, (err, buff)=>{
+            qr.toBuffer(qrPin, (err, buff) => {
                 if (err) throw err
-                signIn(() => {
-                    var ref = firebase.storage().ref(`${companyID}/qrcodes/${dni}.jpg`)
-                    ref.put(buff).then(snap => {
-                        console.log("checkpoint")
-                        snap.ref.getDownloadURL().then(url => {
-                            console.log(url)
-                            mongoose.connection.useDb("lurien").collection("usernews").findOneAndUpdate(
-                                { dni: parseInt(dni) },
-                                { $set: { qrLink: url } }
-                            )
-                        })
-                    })
+                var gPath = `${companyID}/testQr2/${dni}.png`
+                var bucket = "test-lurien.appspot.com"
+                var tkn = uuid.v4()
+                var link = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURIComponent(
+                    gPath
+                )}?alt=media&token=${tkn}`
+                var stream = adm.storage().bucket(bucket).file(gPath).createWriteStream({
+                    metadata: {
+                        metadata: {
+                            contentType: "image/png",
+                            firebaseStorageDownloadTokens: tkn
+                        }
+                    }
                 })
+                stream.on('error', (err) => {
+                    console.log(err)
+                })
+                stream.on('finish', () => {
+                    mongoose.connection.useDb("lurien").collection("usernews").findOneAndUpdate(
+                        { dni: parseInt(dni) },
+                        { $set: { qrLink: link } }
+                    )
+                })
+                stream.end(buff)
             })
         })
     } else {
         res.json({ message: { msgBody: "Chequea si los datos estan bien ingresados!", msgError: true } });
     }
     //mail shit
-    const mailToken = mailVer(mail)
+    const mailToken = uuid.v4()
     console.log(mailToken)
     temptoken(companyID, mail, mailToken)
 
 });
 
-async function temptoken(companyId, mail, token){
+async function temptoken(companyId, mail, token) {
     mongoose.connection.useDb("lurien").collection("temptoken")
-    await TempTokenNew.findOne({companyId}, (err) =>{
-        if(err)
+    await TempTokenNew.findOne({ companyId }, (err) => {
+        if (err)
             console.log('pinchamos :(')
-        else{
-            var newToken = new TempTokenNew({token:token, mail:mail, companyID:companyId});
+        else {
+            var newToken = new TempTokenNew({ token: token, mail: mail, companyID: companyId });
             console.log(newToken)
             newToken.save(err => {
                 if (err) {
@@ -410,7 +372,7 @@ async function temptoken(companyId, mail, token){
                 }
                 else
                     console.log('tt creado uwuuu')
-            })  
+            })
         }
     })
     const text = `<p>hace click <a href="http://localhost:8080/api/user/validation/${token}" target="_blank">aqui</a></p>`
@@ -425,26 +387,31 @@ userRouter.get('/ttget', async (req, res) => {
     else return res.send('owO?')
 })
 
-//FALTA PONER EN TRUE LA EMAIL VALIDATION
 userRouter.get('/validation/:token', async (req, res) => {
     const token = req.params.token;
     console.log(token)
     // await TempTokenNew.findOne({ "token:": token })
-    await TempTokenNew.findOneAndDelete({token: token }, function (err, docs) { 
-        if (err){ 
-            return res.json({ message: { msgBody: err} });
-        } 
-        else{ 
-            return res.json({ message: { msgBody: "deleted the user " + docs} });
-        } 
-    }); 
-    
+    mongoose.connection.useDb("lurien").collection("temptokens")
+    await TempTokenNew.findOneAndDelete({ token: token }, function (err, docs) {
+        if (err) {
+            return res.json({ message: { msgBody: err } });
+        }
+        else {
+            var mail = docs.toObject().mail
+            await UserNew.findOneAndUpdate({mail}, {$set:{verMail:true}}, (err, doc, res)=>{
+                if (err) return res.json(err)
+                else return res.json({ message: { msgBody: "deleted the user " + docs } });
+            })
+            
+        }
+    });
+
 })
 
 
 userRouter.post('/login', passport.authenticate('local', { session: false }), async (req, res) => {
     if (req.isAuthenticated()) {
-        const { _id, username, role, dni, companyID, mail, cantidadFotos,manArea, pfp, qrLink, modelLinks } = req.user;
+        const { _id, username, role, dni, companyID, mail, cantidadFotos, manArea, pfp, qrLink, modelLinks } = req.user;
         console.log("[LOGIN]", req.user.pfp)
         var extras = {
             dni: `${dni}.jpg`,
@@ -453,17 +420,17 @@ userRouter.post('/login', passport.authenticate('local', { session: false }), as
         const token = signToken(_id);
         var fbtkn = await adm.auth().createCustomToken(String(dni), extras)
         res.cookie('access_token', token, { httpOnly: true, sameSite: true });
-        res.status(200).json({ isAuthenticated: true, user: { username, role, dni, companyID, mail, cantidadFotos, pfp, qrLink,manArea, modelLinks }, fbToken: fbtkn });
+        res.status(200).json({ isAuthenticated: true, user: { username, role, dni, companyID, mail, cantidadFotos, pfp, qrLink, manArea, modelLinks }, fbToken: fbtkn });
     }
 });
 userRouter.get('/logout', passport.authenticate('jwt', { session: false }), (req, res) => {
     res.clearCookie('access_token');
-    res.json({ user: { username: "", role: "", dni: "", companyID: "", mail: "",manArea:"", cantidadFotos: 0, pfp: "" }, success: true });
+    res.json({ user: { username: "", role: "", dni: "", companyID: "", mail: "", manArea: "", cantidadFotos: 0, pfp: "" }, success: true });
 });
 
 userRouter.get('/authenticated', passport.authenticate('jwt', { session: false }), async (req, res) => {
-    const { username, role, dni, companyID, mail, cantidadFotos, pfp, qrLink, modelLinks,manArea } = req.user;
-    res.status(200).json({ isAuthenticated: true, user: { username, role, dni, modeloEntrenado: false, companyID, mail,manArea, cantidadFotos, pfp, qrLink, modelLinks } });
+    const { username, role, dni, companyID, mail, cantidadFotos, pfp, qrLink, modelLinks, manArea } = req.user;
+    res.status(200).json({ isAuthenticated: true, user: { username, role, dni, modeloEntrenado: false, companyID, mail, manArea, cantidadFotos, pfp, qrLink, modelLinks } });
 });
 
 

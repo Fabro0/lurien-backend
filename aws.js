@@ -1,4 +1,3 @@
-// Load the SDK and UUID
 const AWS = require('aws-sdk');
 const fs = require('fs')
 const UserNew = require('./models/User.js');

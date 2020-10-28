@@ -5,7 +5,7 @@ const EntradasSchema = new mongoose.Schema({
         type: Number
     },
     hora: {
-        type: String //asumo que es un string??
+        type: String 
     },
     img: {
         type: String
@@ -16,4 +16,3 @@ const EntradasSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model('Entradas', EntradasSchema);
-//hacer entradas and all that shit en atlas later 

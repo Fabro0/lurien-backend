@@ -16,3 +16,8 @@
 
 # Node.js dependencies:
 node_modules/
+users/
+error/
+fotitos/
+known/
+pickles/
