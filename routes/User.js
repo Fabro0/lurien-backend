@@ -391,7 +391,7 @@ userRouter.get('/validation/:token', async (req, res) => {
     console.log(token)
     // await TempTokenNew.findOne({ "token:": token })
     mongoose.connection.useDb("lurien").collection("temptokens")
-    await TempTokenNew.findOneAndDelete({ token: token }, function (err, docs) {
+    await TempTokenNew.findOneAndDelete({ token: token }, async function (err, docs) {
         if (err) {
             return res.json({ message: { msgBody: err } });
         }
