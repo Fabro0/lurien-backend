@@ -10,4 +10,3 @@ const CompanyAreas = new mongoose.Schema({
 });
 
 module.exports = mongoose.model('CompanyAreas', CompanyAreas);
-//uwu

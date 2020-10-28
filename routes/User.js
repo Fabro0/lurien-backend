@@ -414,7 +414,7 @@ userRouter.post('/login', passport.authenticate('local', { session: false }), as
         const { _id, username, role, dni, companyID, mail, cantidadFotos, manArea, pfp, qrLink, modelLinks } = req.user;
         console.log("[LOGIN]", req.user.pfp)
         var extras = {
-            dni: `${dni}.jpg`,
+            dni: `${dni}.png`,
             dniB: String(dni)
         }
         const token = signToken(_id);
