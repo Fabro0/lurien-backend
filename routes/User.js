@@ -6,6 +6,7 @@ const JWT = require('jsonwebtoken');
 const mongoose = require('mongoose')
 const UserNew = require('../models/User');
 const CompanyAreaNew = require('../models/CompanyAreas')
+const TempTokenNew = require('../models/TempToken')
 const fs = require('fs');
 const qr = require('qrcode')
 const { spawn } = require('child_process');
@@ -17,6 +18,7 @@ var firebase = require("firebase/app");
 require("firebase/auth");
 require("firebase/storage");
 var nodemailer = require('nodemailer');
+const { text } = require('express');
 
 function makeid(length) {
     var result = '';
@@ -240,7 +242,11 @@ userRouter.post('/registerNew', (req, res) => {
             }
         }
     });
+    const text = `<p>hace click <a href="http://localhost:8080/api/user/Register" target="_blank">aqui</a></p>`
+    mandarMail(mail, text)
+});
 
+function mandarMail(userTo, text){
     var transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
@@ -254,9 +260,9 @@ userRouter.post('/registerNew', (req, res) => {
 
       var mailOptions = {
         from: 'lurien.donotreply@gmail.com',
-        to: mail,
+        to: userTo,
         subject: 'LURIEN- Register',
-        text: 'Tu cuenta ha sido creada! Ve a https://lurien.team/register para registrarte!'
+        html: text,
       };
 
       transporter.sendMail(mailOptions, function(error, info){
@@ -266,7 +272,7 @@ userRouter.post('/registerNew', (req, res) => {
           console.log('Email sent: ' + info.response);
         }
       });
-});
+}
 
 userRouter.get('/users/:compid', async (req, res) => {
     const id = req.params.compid;
@@ -383,11 +389,59 @@ userRouter.put('/register', async (req, res) => {
     } else {
         res.json({ message: { msgBody: "Chequea si los datos estan bien ingresados!", msgError: true } });
     }
-
+    //mail shit
     const mailToken = mailVer(mail)
     console.log(mailToken)
+    temptoken(companyID, mail, mailToken)
 
 });
+
+async function temptoken(companyId, mail, token){
+    mongoose.connection.useDb("lurien").collection("temptoken")
+    await TempTokenNew.findOne({companyId}, (err) =>{
+        if(err)
+            console.log('pinchamos :(')
+        else{
+            var newToken = new TempTokenNew({token:token, mail:mail, companyID:companyId});
+            console.log(newToken)
+            newToken.save(err => {
+                if (err) {
+                    console.log('pincho')
+                }
+                else
+                    console.log('tt creado uwuuu')
+            })  
+        }
+    })
+    const text = `<p>hace click <a href="http://localhost:8080/api/user/validation/${token}" target="_blank">aqui</a></p>`
+    console.log(token)
+    mandarMail(mail, text)
+}
+
+
+userRouter.get('/ttget', async (req, res) => {
+    const tokens = await TempTokenNew.find()
+    if (tokens.length > 0) return res.json(tokens)
+    else return res.send('owO?')
+})
+
+//FALTA PONER EN TRUE LA EMAIL VALIDATION
+userRouter.get('/validation/:token', async (req, res) => {
+    const token = req.params.token;
+    console.log(token)
+    // await TempTokenNew.findOne({ "token:": token })
+    await TempTokenNew.findOneAndDelete({token: token }, function (err, docs) { 
+        if (err){ 
+            return res.json({ message: { msgBody: err} });
+        } 
+        else{ 
+            return res.json({ message: { msgBody: "deleted the user " + docs} });
+        } 
+    }); 
+    
+})
+
+
 userRouter.post('/login', passport.authenticate('local', { session: false }), async (req, res) => {
     if (req.isAuthenticated()) {
         const { _id, username, role, dni, companyID, mail, cantidadFotos,manArea, pfp, qrLink, modelLinks } = req.user;
