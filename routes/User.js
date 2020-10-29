@@ -212,7 +212,7 @@ userRouter.post('/registerNew', (req, res) => {
             }
         }
     });
-    const text = `<p>hace click <a href="http://localhost:3000/register" target="_blank">aqui</a></p>`
+    const text = `<p>tu manager te creo la cuenta, anda a registrarte con tus datos! <a href="http://localhost:3000/register" target="_blank">aqui</a></p>`
     mandarMail(mail, text)
 });
 
@@ -386,7 +386,7 @@ async function temptoken(companyID, mail, token){
             })  
         }
     })
-    const text = `<p>hace click <a href="http://localhost:8080/api/user/validation/${token}" target="_blank">aqui</a></p>`
+    const text = `<p>Apreta para confirmar tu cuenta: <a href="http://localhost:8080/api/user/validation/${token}" target="_blank">aqui</a></p>`
     console.log(token)
     mandarMail(mail, text)
 }
@@ -407,11 +407,15 @@ userRouter.get('/validation/:token', async (req, res) => {
         if (err) {
             return res.json({ message: { msgBody: err } });
         }
+        if(!docs){
+            console.log("si")
+        }
         else {
+            console.log("LOS DOCS",docs)
             var mail = docs.mail
             await UserNew.findOneAndUpdate({mail}, {$set:{verMail:true}}, (err, doc, resp)=>{
                 if (err) return res.json(err)
-                else return res.json({ message: { msgBody: "funciono", msgError: false } });
+                else return res.redirect('http://localhost:3000/login');
             })
             
         }
