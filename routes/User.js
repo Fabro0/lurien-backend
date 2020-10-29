@@ -9,17 +9,12 @@ const CompanyAreaNew = require('../models/CompanyAreas')
 const TempTokenNew = require('../models/TempToken')
 const fs = require('fs');
 const qr = require('qrcode')
+const uuid = require('uuid')
 const { spawn } = require('child_process');
 const { S3, config } = require('aws-sdk')
 config.update({ region: 'us-east-1' });
 const btoa = require('btoa');
 var adm = require('firebase-admin')
-<<<<<<< HEAD
-=======
-var firebase = require("firebase/app");
-require("firebase/auth");
-require("firebase/storage");
->>>>>>> parent of 9345b5e... un monton de cosa
 var nodemailer = require('nodemailer');
 const { text } = require('express');
 
@@ -36,11 +31,6 @@ function makeid(length) {
     else {
         return result;
     }
-}
-
-async function signIn(callback) {
-    var token = await adm.auth().createCustomToken("amudejemedejamu", { hidden: process.env.hidden })
-    firebase.auth().signInWithCustomToken(token).then(() => callback())
 }
 
 async function validatePin(qrPin) {
@@ -86,28 +76,6 @@ userRouter.get('/tool3/:dni', async (req, res) => {
         doc.save()
     })
     return res.json({ messi: 'messi' })
-})
-
-userRouter.get('/hola/:companyid/:dni', async (req, res) => {
-    var companyID = req.params.companyid
-    var dni = parseInt(req.params.dni)
-    var path = `./qrcodes/${companyID}/${dni}.png`
-    var a = Buffer.from(fs.readFileSync(path))
-    signIn(() => {
-        var ref = firebase.storage().ref(`${companyID}/qrcodes/${dni}.jpg`)
-        ref.put(a).then(snap => {
-            console.log("checkpoint")
-            snap.ref.getDownloadURL().then(url => {
-                console.log(url)
-                mongoose.connection.useDb("lurien").collection("usernews").findOneAndUpdate(
-                    { dni: parseInt(dni) },
-                    { $set: { qrLink: url } }, (err,ress)=>{
-                        if (err) return res.json("noo")
-                        else return res.json("sii oo")
-                    })
-            })
-        })
-    })
 })
 
 //get all users area == area mandada && role == 'user' uwu
@@ -288,11 +256,10 @@ userRouter.get('/delete/:_id', async (req, res) => {
     await UserNew.deleteOne({ "_id": id })
     var dni = user.dni;
     var company = user.companyID;
-    signIn(()=>{
-        var ref = firebase.storage().ref(`${company}/`)
-        ref.child(`pfp/${dni}.jpg`).delete()
-        ref.child(`qrcodes/${dni}.jpg`).delete()
-    })
+    var bucket = adm.storage().bucket("test-lurien.appspot.com")
+    bucket.file(`${company}/qrcodes/${dni}.png`).delete()
+    bucket.file(`${company}/pfp/${dni}.png`).delete()
+    bucket.deleteFiles({prefix: `${company}/model/${dni}/`})
 
 })
 
@@ -345,15 +312,9 @@ const signToken = userID => {
     }, "leo-mattioli", { expiresIn: "1h" });
 }
 
-const mailVer = mail =>{
-    return JWT.sign({
-        iss : "uwu1234",
-        sub : mail
-    },"uwu1234",{expiresIn : "1h"});
-}
 
 userRouter.put('/register', async (req, res) => {
-    const { username, password, dni, companyID, mail } = req.body;
+    const { username, password, dni, companyID } = req.body;
     const user_ = await UserNew.find({ companyID: companyID, dni: dni, createdAccount: false })
     if (user_.length !== 0 && user_ !== []) {
         await UserNew.findOne({ dni: dni }, async function (err, doc) {
@@ -363,8 +324,7 @@ userRouter.put('/register', async (req, res) => {
             if (users.length === 0) {
                 doc.password = password;
                 doc.username = username;
-                doc.mail = mail;
-                doc.createdAccount = true; 
+                doc.createdAccount = true;
                 doc.qrPin = qrPin;
                 doc.save()
             } else {
@@ -372,30 +332,41 @@ userRouter.put('/register', async (req, res) => {
             }
             res.json({ message: { msgBody: "cuenta reg", msgError: false } })
 
-            qr.toBuffer(qrPin, (err, buff)=>{
+            qr.toBuffer(qrPin, (err, buff) => {
                 if (err) throw err
-                signIn(() => {
-                    var ref = firebase.storage().ref(`${companyID}/qrcodes/${dni}.jpg`)
-                    ref.put(buff).then(snap => {
-                        console.log("checkpoint")
-                        snap.ref.getDownloadURL().then(url => {
-                            console.log(url)
-                            mongoose.connection.useDb("lurien").collection("usernews").findOneAndUpdate(
-                                { dni: parseInt(dni) },
-                                { $set: { qrLink: url } }
-                            )
-                        })
-                    })
+                var gPath = `${companyID}/testQr2/${dni}.png`
+                var bucket = "test-lurien.appspot.com"
+                var tkn = uuid.v4()
+                var link = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURIComponent(
+                    gPath
+                )}?alt=media&token=${tkn}`
+                var stream = adm.storage().bucket(bucket).file(gPath).createWriteStream({
+                    metadata: {
+                        metadata: {
+                            contentType: "image/png",
+                            firebaseStorageDownloadTokens: tkn
+                        }
+                    }
                 })
+                stream.on('error', (err) => {
+                    console.log(err)
+                })
+                stream.on('finish', () => {
+                    mongoose.connection.useDb("lurien").collection("usernews").findOneAndUpdate(
+                        { dni: parseInt(dni) },
+                        { $set: { qrLink: link } }
+                    )
+                })
+                stream.end(buff)
             })
         })
     } else {
         res.json({ message: { msgBody: "Chequea si los datos estan bien ingresados!", msgError: true } });
     }
     //mail shit
-    const mailToken = mailVer(mail)
+    const mailToken = uuid.v4()
     console.log(mailToken)
-    temptoken(companyID, mail, mailToken)
+    temptoken(companyID, user_.mail, mailToken)
 
 });
 
@@ -428,12 +399,10 @@ userRouter.get('/ttget', async (req, res) => {
     else return res.send('owO?')
 })
 
-//FALTA PONER EN TRUE LA EMAIL VALIDATION
 userRouter.get('/validation/:token', async (req, res) => {
     const token = req.params.token;
     console.log(token)
     // await TempTokenNew.findOne({ "token:": token })
-<<<<<<< HEAD
     mongoose.connection.useDb("lurien").collection("temptokens")
     await TempTokenNew.findOneAndDelete({ token: token }, async function (err, docs) {
         if (err) {
@@ -441,25 +410,14 @@ userRouter.get('/validation/:token', async (req, res) => {
         }
         else {
             var mail = docs.toObject().mail
-            await UserNew.findOneAndUpdate({mail}, {$set:{verMail:true}}, (err, doc, res)=>{
+            await UserNew.findOneAndUpdate({mail}, {$set:{verMail:true}}, (err, doc, resp)=>{
                 if (err) return res.json(err)
-                else return res.json({ message: { msgBody: "deleted the user " + docs } });
+                else return res.json({ message: { msgBody: "funciono", msgError: false } });
             })
             
         }
     });
 
-=======
-    await TempTokenNew.findOneAndDelete({token: token }, function (err, docs) { 
-        if (err){ 
-            return res.json({ message: { msgBody: err} });
-        } 
-        else{ 
-            return res.json({ message: { msgBody: "deleted the user " + docs} });
-        } 
-    }); 
-    
->>>>>>> parent of 9345b5e... un monton de cosa
 })
 
 

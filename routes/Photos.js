@@ -52,13 +52,9 @@ userRouter.post('/wipeFotos/:companyid/:dni', async (req, res) => {
 
 })
 userRouter.post('/upload/:companyid/:dni', async function (req, res) {
-    function onlyUnique(value, index, self) {
-        return self.indexOf(value) === index;
-      }
     var dni = parseInt(req.params.dni)
     var companyid = req.params.companyid
     var faceIdArray = req.body.data
-    //console.log(">>", req.body.data)
     console.log(req.body.data)
     
     mongoose.connection.useDb("lurien").collection("usernews")
@@ -69,13 +65,8 @@ userRouter.post('/upload/:companyid/:dni', async function (req, res) {
             buffArrays.push(body)
         });
     }
-    AWSManager.listCollectionsAndAddFaces({}, { CollectionId: req.params.companyid }, buffArrays, req.params.dni, res)
+    AWSManager.listCollectionsAndAddFaces({}, { CollectionId: companyid }, buffArrays, req.params.dni, res)
     await UserNew.findOne({dni}, (err, doc)=>{
-        // var actualArray = doc.modelLinks
-        // for (var key in faceIdArray) {
-        //     actualArray.push(faceIdArray[key])
-        // }
-        // var finalArray = actualArray.filter(onlyUnique);
         doc.modelLinks = faceIdArray
         doc.save()
     })
@@ -94,30 +85,5 @@ userRouter.post('/uploadPfp/:companyid/:dni', async function (req, res) {
         {$set: {pfp:req.body.data} }
         )
 })
-
-async function emptyS3Directory(bucket, dir) {
-    var s3 = new S3()
-    const listParams = {
-        Bucket: bucket,
-        Prefix: dir
-    };
-
-    const listedObjects = await s3.listObjectsV2(listParams).promise();
-
-    if (listedObjects.Contents.length === 0) return;
-
-    const deleteParams = {
-        Bucket: bucket,
-        Delete: { Objects: [] }
-    };
-
-    listedObjects.Contents.forEach(({ Key }) => {
-        deleteParams.Delete.Objects.push({ Key });
-    });
-
-    await s3.deleteObjects(deleteParams).promise();
-
-    if (listedObjects.IsTruncated) await emptyS3Directory(bucket, dir);
-}
 
 module.exports = userRouter;
