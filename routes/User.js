@@ -371,7 +371,7 @@ userRouter.put('/register', async (req, res) => {
 
 async function temptoken(companyID, mail, token){
     mongoose.connection.useDb("lurien").collection("temptoken")
-    await TempTokenNew.findOne({companyId}, (err) =>{
+    await TempTokenNew.findOne({companyID}, (err) =>{
         if(err)
             console.log('pinchamos :(')
         else{
