@@ -5,14 +5,22 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 global.XMLHttpRequest = require("xhr2");
+var firebase = require("firebase/app");
 require('dotenv').config()
+require("firebase/auth");
+require("firebase/storage");
 
-var serviceAccount = JSON.parse(process.env.firebaseAdmin)
+var serviceAccount = require("./firebase.json");
 var adm = require('firebase-admin')
 adm.initializeApp({
     credential: adm.credential.cert(serviceAccount),
     databaseURL: 'https://test-lurien.firebaseio.com'
 });
+
+firebase.initializeApp(JSON.parse(process.env.firebase))
+
+
+
 const uri = process.env.MONGO_URI;
 //const uri = 'mongodb://localhost:27017/lurien'
 

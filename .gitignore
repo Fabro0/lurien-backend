@@ -1,7 +1,9 @@
 /node_modules
+
 /users
 /error
 /fotitos
 /known
 /pickles
+
 .env
