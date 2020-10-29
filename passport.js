@@ -11,7 +11,7 @@ const cookieExtractor = req =>{
     return token;
 }
 
-// authorization 
+// authorization a
 passport.use(new JwtStrategy({
     jwtFromRequest : cookieExtractor,
     secretOrKey : "leo-mattioli"
@@ -28,7 +28,7 @@ passport.use(new JwtStrategy({
 
 // authenticated local strategy using username and password
 passport.use(new LocalStrategy((dni,password,done)=>{
-    UserNew.findOne({dni},(err,user)=>{
+    UserNew.findOne({dni, verMail:true},(err,user)=>{
         // something went wrong with database
         if(err)
             return done(err);

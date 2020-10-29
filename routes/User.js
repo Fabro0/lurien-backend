@@ -213,7 +213,7 @@ userRouter.post('/registerNew', (req, res) => {
             }
         }
     });
-    const text = `<p>hace click <a href="http://localhost:8080/api/user/Register" target="_blank">aqui</a></p>`
+    const text = `<p>hace click <a href="http://localhost:3000/register" target="_blank">aqui</a></p>`
     mandarMail(mail, text)
 });
 
