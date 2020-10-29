@@ -1,6 +1,9 @@
 const mongoose = require('mongoose');
 
 const TempToken = new mongoose.Schema({
+    createdAt:{
+        type: Date
+    },
     token: {
         type: String
     },
@@ -8,7 +11,7 @@ const TempToken = new mongoose.Schema({
         type: String //asumo que es un string??
     },
     companyID:{
-        type:String,
+        type:String
     }
 });
 

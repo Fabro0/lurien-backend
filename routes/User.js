@@ -71,11 +71,8 @@ userRouter.get('/tool2/:dni', async (req, res) => {
     return res.json({ messi: 'messi' })
 })
 userRouter.get('/tool3/:dni', async (req, res) => {
-    await UserNew.findOne({ dni: req.params.dni }, function (err, doc) {
-        doc.area = "tu vieja"
-        doc.save()
-    })
-    return res.json({ messi: 'messi' })
+    mongoose.connection.useDb("lurien").collection("temptokens").createIndex({createdAt:1}, {expireAfterSeconds:86400})
+    return res.json({ messi: 'ta' })
 })
 
 //get all users area == area mandada && role == 'user' uwu
@@ -207,8 +204,10 @@ userRouter.post('/registerNew', (req, res) => {
                     if (err) {
                         return res.json({ message: { msgBody: "Hubo un error con el pedido al servidor, ya estamos solucionando!", msgError: true } });
                     }
-                    else
+                    else{
+                        console.log("creado Pa")
                         return res.status(201).json({ message: { msgBody: "Usuario Creado!", msgError: false } });
+                    }
             });
             }
         }
@@ -365,8 +364,8 @@ userRouter.put('/register', async (req, res) => {
     }
     //mail shit
     const mailToken = uuid.v4()
-    console.log(mailToken)
-    temptoken(companyID, user_.mail, mailToken)
+    console.log(user_)
+    temptoken(companyID, user_[0].mail, mailToken)
 
 });
 
@@ -409,7 +408,7 @@ userRouter.get('/validation/:token', async (req, res) => {
             return res.json({ message: { msgBody: err } });
         }
         else {
-            var mail = docs.toObject().mail
+            var mail = docs.mail
             await UserNew.findOneAndUpdate({mail}, {$set:{verMail:true}}, (err, doc, resp)=>{
                 if (err) return res.json(err)
                 else return res.json({ message: { msgBody: "funciono", msgError: false } });
@@ -419,6 +418,7 @@ userRouter.get('/validation/:token', async (req, res) => {
     });
 
 })
+
 
 
 userRouter.post('/login', passport.authenticate('local', { session: false }), async (req, res) => {
