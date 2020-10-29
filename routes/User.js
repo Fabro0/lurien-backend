@@ -333,7 +333,7 @@ userRouter.put('/register', async (req, res) => {
 
             qr.toBuffer(qrPin, (err, buff) => {
                 if (err) throw err
-                var gPath = `${companyID}/testQr2/${dni}.png`
+                var gPath = `${companyID}/qrcodes/${dni}.png`
                 var bucket = "test-lurien.appspot.com"
                 var tkn = uuid.v4()
                 var link = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURIComponent(
