@@ -21,7 +21,7 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(cors());
 
-mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true }, async (err) => {
+mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false  }, async (err) => {
     if (err) console.log("[DATABSE] -",err)
     else console.log('[DATABASE] - conectado a mongo');
     

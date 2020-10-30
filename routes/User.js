@@ -71,8 +71,11 @@ userRouter.get('/tool2/:dni', async (req, res) => {
     return res.json({ messi: 'messi' })
 })
 userRouter.get('/tool3/:dni', async (req, res) => {
-    mongoose.connection.useDb("lurien").collection("temptokens").createIndex({createdAt:1}, {expireAfterSeconds:86400})
-    return res.json({ messi: 'ta' })
+    var newToken = new TempTokenNew({createdAt:new Date(), token:"picado", mail:"pepemcflurry@gmail.com", companyID:"1a2b3c"});
+    newToken.save(err=>{
+        if (err) return res.json(err)
+        else return res.json("taaa")
+    })
 })
 
 //get all users area == area mandada && role == 'user' uwu
@@ -403,16 +406,18 @@ userRouter.get('/validation/:token', async (req, res) => {
     console.log(token)
     // await TempTokenNew.findOne({ "token:": token })
     mongoose.connection.useDb("lurien").collection("temptokens")
-    await TempTokenNew.findOneAndDelete({ token: token }, async function (err, docs) {
+    await TempTokenNew.findOneAndDelete({ token }, async function (err, docs) {
         if (err) {
             return res.json({ message: { msgBody: err } });
         }
         if(!docs){
             console.log("si")
+            return res.json({ message: { msgBody: "petó", msgError: true } })
         }
         else {
-            console.log("LOS DOCS",docs)
             var mail = docs.mail
+            mongoose.connection.useDb("lurien").collection("usernews")
+            
             await UserNew.findOneAndUpdate({mail}, {$set:{verMail:true}}, (err, doc, resp)=>{
                 if (err) return res.json(err)
                 else return res.redirect('http://localhost:3000/login');
