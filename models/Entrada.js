@@ -7,6 +7,9 @@ const EntradasSchema = new mongoose.Schema({
     hora: {
         type: String //asumo que es un string??
     },
+    fecha:{
+        type: String
+    },
     img: {
         type: String
     },
