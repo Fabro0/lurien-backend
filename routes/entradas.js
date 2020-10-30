@@ -1,5 +1,6 @@
 const express = require('express');
 const userRouter = express.Router();
+const mongoose = require('mongoose')
 const UserNew = require('../models/User');
 const Pusher = require("pusher")
 const Entradas = require("../models/Entrada");
@@ -32,11 +33,11 @@ userRouter.post("/new", async (req, res) => {
 userRouter.get("/historial/:companyId", async (req,res) =>{
     // let hola = "culo";
     let companyID = req.params.companyId
-    // let limit = 10;
-    // let skip = 0;
-
-    let entradas = await Entradas.find()
-    // .limit(limit).skip(skip).sort({_id:-1});
+    let limit = 10;
+    let skip = 0;
+    mongoose.connection.useDb("lurien").collection("entradas")
+    let entradas = await Entradas.find().limit(limit).skip(skip).sort({_id:-1});
+     
     console.log(entradas)
     res.json({entradas})
 })

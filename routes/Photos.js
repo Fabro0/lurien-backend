@@ -33,7 +33,6 @@ userRouter.post('/wipeFotos/:companyid/:dni', async (req, res) => {
         FaceIds: faceIdArray
     }
     
-
     await UserNew.findOne({ dni: dni }, function (err, doc) {
         doc.modeloEntrenado = false
         doc.faceIds = []
