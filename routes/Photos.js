@@ -15,8 +15,11 @@ require("firebase/storage");
 
 
 
-userRouter.get('/hola', (req, res) => {
-    res.json({ asdasd: "hollll" })
+userRouter.get('/hola/:companyid/:dni', async (req, res) => {
+    const dni = req.params.dni;
+    const companyid = req.params.companyid
+    const user = await UserNew.findOne({ dni: dni, companyID: companyid })
+    return res.json(user)
 })
 userRouter.post('/wipeFotos/:companyid/:dni', async (req, res) => {
 
