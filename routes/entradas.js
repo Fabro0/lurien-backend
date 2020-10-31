@@ -42,11 +42,14 @@ userRouter.get("/historial/:companyId", async (req,res) =>{
     res.json({entradas})
 })
 
-userRouter.get("/historial/:companyId/norep", async (req,res) =>{
+userRouter.get("/historial/:companyId/arrayday", async (req,res) =>{
     //AGARRAR TODO SEPARAR EN ARRAYS BY FECHA Y AHI HACER LO DE LA FUNCION
     let companyID = req.params.companyId
     let entradas = await Entradas.find()
-    const resuwultado = removeDuplicatesFromArrayByProperty(entradas, 'dni')
+
+    
+
+    const resuwultado = arraysplituwu(entradas)
     res.json({resuwultado})
 })
 
@@ -69,6 +72,21 @@ const removeDuplicatesFromArrayByProperty = (arr, prop) => arr.reduce((accumulat
     }
     return accumulator;
 }, [])
+
+function arraysplituwu(entradas){
+
+    shdjk = entradas.reduce(function(r, o){
+        var k = o._doc.fecha;   // unique `loc` key
+        console.log("k: " + (o._doc.hour))
+        if (r[k] || (r[k]=[])) r[k].push({fecha:k, hora: o._doc.hour, dni: o._doc.dni});
+        return r;
+    }, {});
+
+    for (const arrName in shdjk){
+        shdjk[arrName] = removeDuplicatesFromArrayByProperty(shdjk[arrName], 'dni')
+    }
+    return shdjk
+} 
 
 
 
