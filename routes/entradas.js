@@ -46,9 +46,23 @@ userRouter.get("/historial/:companyId/arrayday", async (req,res) =>{
     //AGARRAR TODO SEPARAR EN ARRAYS BY FECHA Y AHI HACER LO DE LA FUNCION
     let companyID = req.params.companyId
     let entradas = await Entradas.find()
-
     const resuwultado = arraysplituwu(entradas)
-    res.json({resuwultado})
+
+    let imfuckingdone = []
+    for (const arg in resuwultado){
+        console.log(resuwultado[arg])
+        lista = resuwultado[arg]
+        let listavacia = []
+
+        let uwu = 0
+        while (lista.length > uwu){
+            listavacia.push(lista[uwu].hora)
+            uwu = uwu + 1
+        }
+        const resultadopapa = promedioHora(listavacia)
+        imfuckingdone.push('dia: ' + arg + ', hora promedio: ' +  resultadopapa)
+    }
+    res.json(imfuckingdone)
 })
 
 userRouter.get("/historial/:companyId/:dni", async (req,res) =>{
@@ -88,17 +102,23 @@ function arraysplituwu(entradas){
 
 
 userRouter.get("/prueba", async (req,res) =>{
-    let {lista} = req.body
+    let { resuwultado } = req.body
+    // const abcdario = 0
+    let imfuckingdone = []
+    for (const arg in resuwultado){
+        console.log(resuwultado[arg])
+        lista = resuwultado[arg]
+        let listavacia = []
 
-    let listavacia = []
-
-    let uwu = 0
-    while (lista.length > uwu){
-        listavacia.push(lista[uwu].hora)
-        uwu = uwu + 1
+        let uwu = 0
+        while (lista.length > uwu){
+            listavacia.push(lista[uwu].hora)
+            uwu = uwu + 1
+        }
+        const resultadopapa = promedioHora(listavacia)
+        imfuckingdone.push('dia: ' + arg + ', hora promedio: ' +  resultadopapa)
     }
-    const resultadopapa = promedioHora(listavacia)
-    res.json(resultadopapa)
+    res.json(imfuckingdone)
 })
 
 function promedioHora(listowo){
@@ -130,8 +150,7 @@ function promedioHora(listowo){
     var rhours = Math.floor(hours);
     var minutes = (hours - rhours) * 60;
     var rminutes = Math.round(minutes);
-    if (rhours[0] != 1 || 2)
-        rhours = '0' + rhours
+    
     return rhours + ":" + rminutes;
 }
 
