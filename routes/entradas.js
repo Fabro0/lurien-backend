@@ -47,8 +47,6 @@ userRouter.get("/historial/:companyId/arrayday", async (req,res) =>{
     let companyID = req.params.companyId
     let entradas = await Entradas.find()
 
-    
-
     const resuwultado = arraysplituwu(entradas)
     res.json({resuwultado})
 })
@@ -59,7 +57,8 @@ userRouter.get("/historial/:companyId/:dni", async (req,res) =>{
     const { companyID, dni } = req.params
 
     const entUser = await Entradas.find({ dni: { $eq: dni } });
-    const resultado = removeDuplicatesFromArrayByProperty(entUser, 'fecha')
+    const darvueltaArray = entUser.reverse()
+    const resultado = removeDuplicatesFromArrayByProperty(darvueltaArray, 'fecha')
     if (resultado.length > 7)
         resultado = resultado.slice(1, 7)
     console.log(resultado);
@@ -77,8 +76,7 @@ function arraysplituwu(entradas){
 
     shdjk = entradas.reduce(function(r, o){
         var k = o._doc.fecha;   // unique `loc` key
-        console.log("k: " + (o._doc.hour))
-        if (r[k] || (r[k]=[])) r[k].push({fecha:k, hora: o._doc.hour, dni: o._doc.dni});
+        if (r[k] || (r[k]=[])) r[k].push({hora: o._doc.hour, dni:o._doc.dni});
         return r;
     }, {});
 
@@ -89,5 +87,52 @@ function arraysplituwu(entradas){
 } 
 
 
+userRouter.get("/prueba", async (req,res) =>{
+    let {lista} = req.body
+
+    let listavacia = []
+
+    let uwu = 0
+    while (lista.length > uwu){
+        listavacia.push(lista[uwu].hora)
+        uwu = uwu + 1
+    }
+    const resultadopapa = promedioHora(listavacia)
+    res.json(resultadopapa)
+})
+
+function promedioHora(listowo){
+
+    //promedio hora = 13:55, 16:56, 12:02, 17:45
+    let horas = []
+    let min = []
+    let die = 0
+
+    while(listowo.length > die){
+        horas.push(listowo[die].slice(0,2))
+        min.push(listowo[die].slice(3,5))
+        die += 1
+    }
+    
+    die = 0
+    while (horas.length > die){
+        horas[die] = horas[die] * 60
+        min[die] = min[die] * 1
+        die = die + 1
+    }
+    console.log(horas, min)
+    // console.log(horas)
+    // console.log(min)
+    let allmin = horas.reduce((a, b) => a + b, 0) + min.reduce((a, b) => a + b, 0)
+    allmin = allmin / listowo.length
+    console.log(allmin)
+    var hours = (allmin / 60);
+    var rhours = Math.floor(hours);
+    var minutes = (hours - rhours) * 60;
+    var rminutes = Math.round(minutes);
+    if (rhours[0] != 1 || 2)
+        rhours = '0' + rhours
+    return rhours + ":" + rminutes;
+}
 
 module.exports = userRouter;
