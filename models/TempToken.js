@@ -10,6 +10,9 @@ const TempToken = new mongoose.Schema({
     mail: {
         type: String //asumo que es un string??
     },
+    dni:{
+        type:Number
+    },
     companyID:{
         type:String
     }

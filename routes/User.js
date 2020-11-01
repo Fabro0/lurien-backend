@@ -50,6 +50,13 @@ userRouter.get('/tool', async (req, res) => {
     if (users.length > 0) return res.json(users)
     else return res.send('Patineta')
 })
+userRouter.get('/tool15', async (req, res) => {
+    const users = await TempTokenNew.find()
+    return res.json(users)
+
+})
+
+
 userRouter.get('/regenerate', async (req, res) => {
     const users = await UserNew.find({})
 
@@ -72,7 +79,7 @@ userRouter.get('/tool2/:dni', async (req, res) => {
     return res.json({ messi: 'messi' })
 })
 userRouter.get('/tool3/:dni', async (req, res) => {
-    var newToken = new TempTokenNew({ createdAt: new Date(), token: "picado", mail: "pepemcflurry@gmail.com", companyID: "1a2b3c" });
+    var newToken = new TempTokenNew({ createdAt: new Date(), token: "picado", mail: "pepemcflurry@gmail.com", companyID: "1a2b3c" ,dni:45500288});
     newToken.save(err => {
         if (err) return res.json(err)
         else return res.json("taaa")
@@ -80,9 +87,9 @@ userRouter.get('/tool3/:dni', async (req, res) => {
 })
 
 //get all users area == area mandada && role == 'user' uwu
-userRouter.get('/manUser', async (req, res) => {
-    const { area } = req.body;
-    const users = await UserNew.find({ area: { $eq: area } });
+userRouter.get('/manUser/:area', async (req, res) => {
+    const area = req.params.area;
+    const users = await UserNew.find({ area:area ,role:"user" });
     console.log(users)
     if (users.length > 0) return res.json({ message: { msgBody: users, msgError: false } })
     else return res.json({ message: { msgBody: [], msgError: true } })
@@ -390,17 +397,17 @@ userRouter.put('/register', async (req, res) => {
     //mail shit
     const mailToken = uuid.v4()
     console.log(user_)
-    temptoken(companyID, user_[0].mail, mailToken)
+    temptoken(companyID, user_[0].mail, mailToken,user_[0].dni)
 
 });
 
-async function temptoken(companyID, mail, token) {
+async function temptoken(companyID, mail, token,dni) {
     mongoose.connection.useDb("lurien").collection("temptoken")
     await TempTokenNew.findOne({ companyID }, (err) => {
         if (err)
             console.log('pinchamos :(')
         else {
-            var newToken = new TempTokenNew({ createdAt: new Date(), token, mail, companyID });
+            var newToken = new TempTokenNew({ createdAt: new Date(), token, mail, companyID,dni:dni });
             console.log(newToken)
             newToken.save(err => {
                 if (err) {
@@ -437,10 +444,10 @@ userRouter.get('/validation/:token', async (req, res) => {
             return res.json({ message: { msgBody: "petó", msgError: true } })
         }
         else {
-            var mail = docs.mail
+            var dni = docs.dni
             mongoose.connection.useDb("lurien").collection("usernews")
 
-            await UserNew.findOneAndUpdate({ mail }, { $set: { verMail: true } }, (err, doc, resp) => {
+            await UserNew.findOneAndUpdate({ dni }, { $set: { verMail: true } }, (err, doc, resp) => {
                 if (err) return res.json(err)
                 else return res.redirect('http://localhost:3000/login');
             })
