@@ -8,16 +8,10 @@ const AWSManager = require('../aws');
 const UserNew = require('../models/User');
 const CompanyAreaNew = require('../models/CompanyAreas')
 const TempTokenNew = require('../models/TempToken')
-const fs = require('fs');
 const qr = require('qrcode')
 const uuid = require('uuid')
-const { spawn } = require('child_process');
-const { S3, config } = require('aws-sdk')
-config.update({ region: 'us-east-1' });
-const btoa = require('btoa');
-var adm = require('firebase-admin')
-var nodemailer = require('nodemailer');
-const { text } = require('express');
+const adm = require('firebase-admin')
+const nodemailer = require('nodemailer');
 
 function makeid(length) {
     var result = '';
@@ -432,19 +426,14 @@ userRouter.get('/ttget', async (req, res) => {
 
 userRouter.get('/validation/:token', async (req, res) => {
     const token = req.params.token;
-    console.log(token)
-    // await TempTokenNew.findOne({ "token:": token })
     mongoose.connection.useDb("lurien").collection("temptokens")
+    const newTokenObj = await TempTokenNew.findOne({token})
     await TempTokenNew.findOneAndDelete({ token }, async function (err, docs) {
         if (err) {
             return res.json({ message: { msgBody: err } });
         }
-        if (!docs) {
-            console.log("si")
-            return res.json({ message: { msgBody: "petó", msgError: true } })
-        }
         else {
-            var dni = docs.dni
+            var dni = docs ? docs.dni : newTokenObj.dni
             mongoose.connection.useDb("lurien").collection("usernews")
 
             await UserNew.findOneAndUpdate({ dni }, { $set: { verMail: true } }, (err, doc, resp) => {
