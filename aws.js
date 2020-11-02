@@ -3,7 +3,9 @@ const AWS = require('aws-sdk');
 const fs = require('fs')
 const UserNew = require('./models/User.js');
 AWS.config.update({ region: 'us-east-1' });
-
+require('dotenv').config()
+var credentials = new AWS.Credentials(process.env.AWS_ID, process.env.AWS_SECRET)
+AWS.config.update({credentials})
 const rekognition = new AWS.Rekognition();
 const s3 = new AWS.S3();
 
@@ -33,10 +35,13 @@ class AWSManager {
     });
 
   }
-  createCollection (parametros) {
+  createCollection (parametros, callback) {
     rekognition.createCollection(parametros, function (err, data) {
       if (err) console.log(err, err.stack);
-      else console.log(data);
+      else{
+        console.log(data)
+        callback()
+      } 
     });
   }
 

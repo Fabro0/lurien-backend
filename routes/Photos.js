@@ -21,6 +21,12 @@ userRouter.get('/hola/:companyid/:dni', async (req, res) => {
     const user = await UserNew.findOne({ dni: dni, companyID: companyid })
     return res.json(user)
 })
+
+userRouter.get('/testrek', async (req, res)=>{
+    AWSManager.createCollection({CollectionId:'TEST'}, ()=>{
+        res.json("saas")
+    })
+})
 userRouter.post('/wipeFotos/:companyid/:dni', async (req, res) => {
 
 
