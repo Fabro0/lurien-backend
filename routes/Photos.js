@@ -23,8 +23,8 @@ userRouter.get('/hola/:companyid/:dni', async (req, res) => {
 })
 
 userRouter.get('/testrek', async (req, res)=>{
-    AWSManager.createCollection({CollectionId:'TEST'}, ()=>{
-        res.json("saas")
+    AWSManager.listFaces({CollectionId:'TEST'}, (data)=>{
+        res.json(data)
     })
 })
 userRouter.post('/wipeFotos/:companyid/:dni', async (req, res) => {

@@ -217,7 +217,7 @@ userRouter.post('/registerNew', (req, res) => {
             }
         }
     });
-    const text = `<p>tu manager te creo la cuenta, anda a registrarte con tus datos! <a href="http://localhost:3000/register" target="_blank">aqui</a></p>`
+    const text = `<p>tu manager te creo la cuenta, anda a registrarte con tus datos! <a href="http://lurien.netlify.app/register" target="_blank">aqui</a></p>`
     mandarMail(mail, text)
 });
 
@@ -412,7 +412,7 @@ async function temptoken(companyID, mail, token,dni) {
             })
         }
     })
-    const text = `<p>Apreta para confirmar tu cuenta: <a href="http://localhost:8080/api/user/validation/${token}" target="_blank">aqui</a></p>`
+    const text = `<p>Apreta para confirmar tu cuenta: <a href="http://backend.lurien.team/api/user/validation/${token}" target="_blank">aqui</a></p>`
     console.log(token)
     mandarMail(mail, text)
 }
@@ -438,7 +438,7 @@ userRouter.get('/validation/:token', async (req, res) => {
 
             await UserNew.findOneAndUpdate({ dni }, { $set: { verMail: true } }, (err, doc, resp) => {
                 if (err) return res.json(err)
-                else return res.redirect('http://localhost:3000/login');
+                else return res.redirect('http://lurien.netlify.app/login');
             })
 
         }
